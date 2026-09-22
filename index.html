@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Ensamblaje Básico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 15px 30px;
+            border-bottom: 2px solid #0f3460;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        header .subtitle {
+            font-size: 0.8rem;
+            color: #7a7a9a;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            grid-template-rows: 1fr auto;
+            gap: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #1a1a3e;
+        }
+
+        .panel-header {
+            background: #12121f;
+            padding: 10px 15px;
+            font-size: 0.85rem;
+            color: #00d4ff;
+            border-bottom: 1px solid #1a1a3e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .line-numbers {
+            background: #0d0d18;
+            padding: 15px 10px;
+            text-align: right;
+            color: #3a3a5a;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            min-width: 45px;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #codeEditor {
+            flex: 1;
+            background: #0a0a14;
+            color: #c8d6e5;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+        }
+
+        #codeEditor::placeholder {
+            color: #2a2a4a;
+        }
+
+        .controls {
+            background: #12121f;
+            padding: 12px 15px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #1a1a3e;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border: 1px solid #0f3460;
+            background: linear-gradient(180deg, #1a2a4a, #0f1f3a);
+            color: #00d4ff;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: linear-gradient(180deg, #2a3a5a, #1a2a4a);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn-run {
+            border-color: #00c853;
+            color: #00c853;
+            background: linear-gradient(180deg, #0a2a1a, #051a0f);
+        }
+
+        .btn-run:hover {
+            box-shadow: 0 0 10px rgba(0, 200, 83, 0.3);
+        }
+
+        .btn-step {
+            border-color: #ffab00;
+            color: #ffab00;
+            background: linear-gradient(180deg, #2a1f0a, #1a150a);
+        }
+
+        .btn-step:hover {
+            box-shadow: 0 0 10px rgba(255, 171, 0, 0.3);
+        }
+
+        .btn-reset {
+            border-color: #ff5252;
+            color: #ff5252;
+            background: linear-gradient(180deg, #2a0a0a, #1a0505);
+        }
+
+        .btn-reset:hover {
+            box-shadow: 0 0 10px rgba(255, 82, 82, 0.3);
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .registers-section {
+            padding: 15px;
+            border-bottom: 1px solid #1a1a3e;
+        }
+
+        .registers-section h3 {
+            color: #00d4ff;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .register-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .register-item {
+            background: #0d0d18;
+            border: 1px solid #1a1a3e;
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .register-item.active {
+            border-color: #00d4ff;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+
+        .register-item .reg-name {
+            color: #7a7a9a;
+            font-size: 0.75rem;
+        }
+
+        .register-item .reg-value {
+            color: #00ff88;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .memory-section {
+            padding: 15px;
+            border-bottom: 1px solid #1a1a3e;
+        }
+
+        .memory-section h3 {
+            color: #00d4ff;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .memory-cell {
+            background: #0d0d18;
+            border: 1px solid #1a1a3e;
+            border-radius: 3px;
+            padding: 5px;
+            text-align: center;
+            font-size: 0.7rem;
+        }
+
+        .memory-cell .addr {
+            color: #5a5a7a;
+            font-size: 0.6rem;
+        }
+
+        .memory-cell .val {
+            color: #ffab00;
+            font-size: 0.8rem;
+        }
+
+        .memory-cell.active {
+            border-color: #ffab00;
+        }
+
+        .flags-section {
+            padding: 15px;
+            border-bottom: 1px solid #1a1a3e;
+        }
+
+        .flags-section h3 {
+            color: #00d4ff;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .flags-grid {
+            display: flex;
+            gap: 10px;
+        }
+
+        .flag-item {
+            background: #0d0d18;
+            border: 1px solid #1a1a3e;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+        }
+
+        .flag-item .flag-name {
+            color: #7a7a9a;
+        }
+
+        .flag-item .flag-val {
+            color: #ff5252;
+            font-weight: bold;
+        }
+
+        .flag-item .flag-val.on {
+            color: #00ff88;
+        }
+
+        .console-panel {
+            grid-column: 1 / -1;
+            background: #080810;
+            border-top: 2px solid #1a1a3e;
+            max-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .console-output {
+            flex: 1;
+            padding: 12px 15px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .console-output .log-info {
+            color: #00d4ff;
+        }
+
+        .console-output .log-success {
+            color: #00ff88;
+        }
+
+        .console-output .log-error {
+            color: #ff5252;
+        }
+
+        .console-output .log-warn {
+            color: #ffab00;
+        }
+
+        .console-output .log-output {
+            color: #e0e0e0;
+        }
+
+        .console-output .log-step {
+            color: #7a7a9a;
+            font-size: 0.75rem;
+        }
+
+        .help-section {
+            padding: 15px;
+        }
+
+        .help-section h3 {
+            color: #00d4ff;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .help-item {
+            font-size: 0.7rem;
+            color: #7a7a9a;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .help-item code {
+            color: #00ff88;
+            background: #0d0d18;
+            padding: 1px 4px;
+            border-radius: 2px;
+        }
+
+        .current-line-indicator {
+            background: #1a1a0a;
+            border-left: 3px solid #ffab00;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .speed-control label {
+            font-size: 0.75rem;
+            color: #7a7a9a;
+        }
+
+        .speed-control input[type="range"] {
+            width: 80px;
+            accent-color: #00d4ff;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a14;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a4a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a3a5a;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+
+            .editor-panel {
+                border-right: none;
+                border-bottom: 2px solid #1a1a3e;
+                min-height: 300px;
+            }
+
+            .side-panel {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>⚡ ASM Simulator v1.0</h1>
+            <div class="subtitle">Simulador de Ensamblaje Básico — Operaciones Aritméticas</div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="editor-panel">
+            <div class="panel-header">
+                <span>📝 Editor de Código</span>
+                <span id="lineInfo">Línea: 1</span>
+            </div>
+            <div class="code-area">
+                <div class="line-numbers" id="lineNumbers">1</div>
+                <textarea id="codeEditor" placeholder="; Escribe tu código ensamblador aquí
+; Instrucciones disponibles:
+;   LOAD Rn, valor    - Cargar valor en registro
+;   ADD Rn, Rm        - Sumar Rm a Rn
+;   SUB Rn, Rm        - Restar Rm de Rn
+;   MUL Rn, Rm        - Multiplicar Rn por Rm
+;   DIV Rn, Rm        - Dividir Rn entre Rm
+;   MOD Rn, Rm        - Módulo de Rn entre Rm
+;   PRINT Rn          - Imprimir valor de registro
+;   STORE Rn, dir     - Guardar registro en memoria
+;   LOADM Rn, dir     - Cargar desde memoria a registro
+;   INC Rn            - Incrementar registro
+;   DEC Rn            - Decrementar registro
+;   CMP Rn, Rm        - Comparar registros
+;   JMP etiqueta      - Saltar a etiqueta
+;   JZ etiqueta       - Saltar si es cero
+;   JNZ etiqueta      - Saltar si no es cero
+;   JL etiqueta       - Saltar si menor
+;   JG etiqueta       - Saltar si mayor
+;   HALT              - Detener ejecución
+;   ; comentario      - Línea de comentario
+;
+; Ejemplo:
+LOAD R1, 10
+LOAD R2, 5
+ADD R1, R2
+PRINT R1"></textarea>
+            </div>
+            <div class="controls">
+                <button class="btn btn-run" onclick="runProgram()">▶ Ejecutar</button>
+                <button class="btn btn-step" onclick="stepProgram()">⏭ Paso</button>
+                <button class="btn btn-reset" onclick="resetSimulator()">⟲ Reset</button>
+                <button class="btn" onclick="loadExample(1)">Ejemplo 1</button>
+                <button class="btn" onclick="loadExample(2)">Ejemplo 2</button>
+                <button class="btn" onclick="loadExample(3)">Ejemplo 3</button>
+                <div class="speed-control">
+                    <label>Velocidad:</label>
+                    <input type="range" id="speedRange" min="50" max="1000" value="300">
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="registers-section">
+                <h3>📊 Registros</h3>
+                <div class="register-grid" id="registerGrid">
+                    <div class="register-item" id="reg-R0">
+                        <span class="reg-name">R0</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                    <div class="register-item" id="reg-R1">
+                        <span class="reg-name">R1</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                    <div class="register-item" id="reg-R2">
+                        <span class="reg-name">R2</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                    <div class="register-item" id="reg-R3">
+                        <span class="reg-name">R3</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                    <div class="register-item" id="reg-R4">
+                        <span class="reg-name">R4</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                    <div class="register-item" id="reg-R5">
+                        <span class="reg-name">R5</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                    <div class="register-item" id="reg-R6">
+                        <span class="reg-name">R6</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                    <div class="register-item" id="reg-R7">
+                        <span class="reg-name">R7</span>
+                        <span class="reg-value">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flags-section">
+                <h3>🚩 Banderas (Flags)</h3>
+                <div class="flags-grid">
+                    <div class="flag-item">
+                        <span class="flag-name">ZERO: </span>
+                        <span class="flag-val" id="flag-Z">0</span>
+                    </div>
+                    <div class="flag-item">
+                        <span class="flag-name">NEG: </span>
+                        <span class="flag-val" id="flag-N">0</span>
+                    </div>
+                    <div class="flag-item">
+                        <span class="flag-name">CARRY: </span>
+                        <span class="flag-val" id="flag-C">0</span>
+                    </div>
+                    <div class="flag-item">
+                        <span class="flag-name">OVER: </span>
+                        <span class="flag-val" id="flag-O">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="memory-section">
+                <h3>💾 Memoria (16 celdas)</h3>
+                <div class="memory-grid" id="memoryGrid"></div>
+            </div>
+
+            <div class="help-section">
+                <h3>📖 Referencia Rápida</h3>
+                <div class="help-item"><code>LOAD R1, 42</code> → Carga 42 en R1</div>
+                <div class="help-item"><code>ADD R1, R2</code> → R1 = R1 + R2</div>
+                <div class="help-item"><code>SUB R1, R2</code> → R1 = R1 - R2</div>
+                <div class="help-item"><code>MUL R1, R2</code> → R1 = R1 × R2</div>
+                <div class="help-item"><code>DIV R1, R2</code> → R1 = R1 ÷ R2</div>
+                <div class="help-item"><code>MOD R1, R2</code> → R1 = R1 mod R2</div>
+                <div class="help-item"><code>INC R1</code> → R1 = R1 + 1</div>
+                <div class="help-item"><code>DEC R1</code> → R1 = R1 - 1</div>
+                <div class="help-item"><code>CMP R1, R2</code> → Compara R1 con R2</div>
+                <div class="help-item"><code>PRINT R1</code> → Muestra valor de R1</div>
+                <div class="help-item"><code>STORE R1, 5</code> → Guarda R1 en mem[5]</div>
+                <div class="help-item"><code>LOADM R1, 5</code> → Carga mem[5] en R1</div>
+                <div class="help-item"><code>JMP etiq</code> → Salta a etiqueta</div>
+                <div class="help-item"><code>JZ etiq</code> → Salta si ZERO=1</div>
+                <div class="help-item"><code>HALT</code> → Detiene ejecución</div>
+            </div>
+        </div>
+
+        <div class="console-panel">
+            <div class="panel-header">
+                <span>🖥 Consola de Salida</span>
+                <button class="btn" onclick="clearConsole()" style="padding:4px 10px; font-size:0.7rem;">Limpiar</button>
+            </div>
+            <div class="console-output" id="consoleOutput">
+                <div class="log-info">[Sistema] Simulador de ensamblaje iniciado. Escribe código y presiona Ejecutar.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== ESTADO DEL SIMULADOR ====================
+        const state = {
+            registers: { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0 },
+            memory: new Array(16).fill(0),
+            flags: { Z: 0, N: 0, C: 0, O: 0 },
+            programCounter: 0,
+            instructions: [],
+            labels: {},
+            running: false,
+            halted: false,
+            stepMode: false,
+            stepTimeout: null
+        };
+
+        // ==================== INICIALIZACIÓN ====================
+        function initMemoryGrid() {
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'memory-cell';
+                cell.id = `mem-${i}`;
+                cell.innerHTML = `<div class="addr">[${i}]</div><div class="val">0</div>`;
+                grid.appendChild(cell);
+            }
+        }
+
+        function initEditor() {
+            const editor = document.getElementById('codeEditor');
+            editor.addEventListener('input', updateLineNumbers);
+            editor.addEventListener('scroll', syncScroll);
+            editor.addEventListener('keydown', handleTab);
+            updateLineNumbers();
+        }
+
+        function updateLineNumbers() {
+            const editor = document.getElementById('codeEditor');
+            const lines = editor.value.split('\n').length;
+            const lineNums = document.getElementById('lineNumbers');
+            lineNums.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+        }
+
+        function syncScroll() {
+            const editor = document.getElementById('codeEditor');
+            const lineNums = document.getElementById('lineNumbers');
+            lineNums.scrollTop = editor.scrollTop;
+        }
+
+        function handleTab(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const editor = e.target;
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                editor.value = editor.value.substring(0, start) + '    ' + editor.value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 4;
+            }
+        }
+
+        // ==================== PARSING ====================
+        function parseProgram(code) {
+            const lines = code.split('\n');
+            const instructions = [];
+            const labels = {};
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+
+                // Saltar líneas vacías y comentarios
+                if (!line || line.startsWith(';')) continue;
+
+                // Remover comentarios inline
+                const commentIdx = line.indexOf(';');
+                if (commentIdx !== -1) {
+                    line = line.substring(0, commentIdx).trim();
+                }
+
+                if (!line) continue;
+
+                // Detectar etiquetas
+                if (line.endsWith(':')) {
+                    const labelName = line.slice(0, -1).trim().toUpperCase();
+                    labels[labelName] = instructions.length;
+                    continue;
+                }
+
+                // Parsear instrucción
+                const parts = line.split(/[\s,]+/).filter(p => p);
+                if (parts.length > 0) {
+                    instructions.push({
+                        opcode: parts[0].toUpperCase(),
+                        operands: parts.slice(1),
+                        lineNum: i + 1,
+                        raw: line
+                    });
+                }
+            }
+
+            return { instructions, labels };
+        }
+
+        // ==================== EJECUCIÓN ====================
+        function getRegisterValue(operand) {
+            const reg = operand.toUpperCase();
+            if (state.registers.hasOwnProperty(reg)) {
+                return state.registers[reg];
+            }
+            throw new Error(`Registro inválido: ${operand}`);
+        }
+
+        function setRegister(reg, value) {
+            reg = reg.toUpperCase();
+            if (!state.registers.hasOwnProperty(reg)) {
+                throw new Error(`Registro inválido: ${reg}`);
+            }
+            state.registers[reg] = value;
+            updateFlags(value);
+            updateRegisterDisplay(reg);
+        }
+
+        function parseOperand(operand) {
+            const upper = operand.toUpperCase();
+            if (state.registers.hasOwnProperty(upper)) {
+                return state.registers[upper];
+            }
+            const num = parseInt(operand);
+            if (!isNaN(num)) return num;
+            throw new Error(`Operando inválido: ${operand}`);
+        }
+
+        function updateFlags(value) {
+            state.flags.Z = (value === 0) ? 1 : 0;
+            state.flags.N = (value < 0) ? 1 : 0;
+            state.flags.C = (value > 99999) ? 1 : 0;
+            state.flags.O = (value > 2147483647 || value < -2147483648) ? 1 : 0;
+            updateFlagsDisplay();
+        }
+
+        function executeInstruction(instr) {
+            const { opcode, operands } = instr;
+
+            switch (opcode) {
+                case 'LOAD': {
+                    if (operands.length < 2) throw new Error('LOAD requiere: registro, valor');
+                    const reg = operands[0].toUpperCase();
+                    const val = parseInt(operands[1]);
+                    if (isNaN(val)) throw new Error(`Valor inválido: ${operands[1]}`);
+                    setRegister(reg, val);
+                    logConsole(`LOAD ${reg} ← ${val}`, 'step');
+                    break;
+                }
+
+                case 'ADD': {
+                    if (operands.length < 2) throw new Error('ADD requiere: Rn, Rm');
+                    const reg = operands[0].toUpperCase();
+                    const val = parseOperand(operands[1]);
+                    const old = state.registers[reg];
+                    setRegister(reg, old + val);
+                    logConsole(`ADD ${reg} = ${old} + ${val} = ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'SUB': {
+                    if (operands.length < 2) throw new Error('SUB requiere: Rn, Rm');
+                    const reg = operands[0].toUpperCase();
+                    const val = parseOperand(operands[1]);
+                    const old = state.registers[reg];
+                    setRegister(reg, old - val);
+                    logConsole(`SUB ${reg} = ${old} - ${val} = ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'MUL': {
+                    if (operands.length < 2) throw new Error('MUL requiere: Rn, Rm');
+                    const reg = operands[0].toUpperCase();
+                    const val = parseOperand(operands[1]);
+                    const old = state.registers[reg];
+                    setRegister(reg, old * val);
+                    logConsole(`MUL ${reg} = ${old} × ${val} = ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'DIV': {
+                    if (operands.length < 2) throw new Error('DIV requiere: Rn, Rm');
+                    const reg = operands[0].toUpperCase();
+                    const val = parseOperand(operands[1]);
+                    if (val === 0) throw new Error('Error: División entre cero');
+                    const old = state.registers[reg];
+                    setRegister(reg, Math.floor(old / val));
+                    logConsole(`DIV ${reg} = ${old} ÷ ${val} = ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'MOD': {
+                    if (operands.length < 2) throw new Error('MOD requiere: Rn, Rm');
+                    const reg = operands[0].toUpperCase();
+                    const val = parseOperand(operands[1]);
+                    if (val === 0) throw new Error('Error: División entre cero');
+                    const old = state.registers[reg];
+                    setRegister(reg, old % val);
+                    logConsole(`MOD ${reg} = ${old} mod ${val} = ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'INC': {
+                    if (operands.length < 1) throw new Error('INC requiere: Rn');
+                    const reg = operands[0].toUpperCase();
+                    state.registers[reg]++;
+                    updateFlags(state.registers[reg]);
+                    updateRegisterDisplay(reg);
+                    logConsole(`INC ${reg} = ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'DEC': {
+                    if (operands.length < 1) throw new Error('DEC requiere: Rn');
+                    const reg = operands[0].toUpperCase();
+                    state.registers[reg]--;
+                    updateFlags(state.registers[reg]);
+                    updateRegisterDisplay(reg);
+                    logConsole(`DEC ${reg} = ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'CMP': {
+                    if (operands.length < 2) throw new Error('CMP requiere: Rn, Rm');
+                    const val1 = parseOperand(operands[0]);
+                    const val2 = parseOperand(operands[1]);
+                    const diff = val1 - val2;
+                    state.flags.Z = (diff === 0) ? 1 : 0;
+                    state.flags.N = (diff < 0) ? 1 : 0;
+                    updateFlagsDisplay();
+                    logConsole(`CMP ${val1} vs ${val2} → Z=${state.flags.Z}, N=${state.flags.N}`, 'step');
+                    break;
+                }
+
+                case 'PRINT': {
+                    if (operands.length < 1) throw new Error('PRINT requiere: Rn');
+                    const val = parseOperand(operands[0]);
+                    logConsole(`[OUTPUT] ${val}`, 'output');
+                    break;
+                }
+
+                case 'STORE': {
+                    if (operands.length < 2) throw new Error('STORE requiere: Rn, dirección');
+                    const reg = operands[0].toUpperCase();
+                    const addr = parseInt(operands[1]);
+                    if (isNaN(addr) || addr < 0 || addr >= 16) throw new Error(`Dirección inválida: ${operands[1]}`);
+                    state.memory[addr] = state.registers[reg];
+                    updateMemoryDisplay(addr);
+                    logConsole(`STORE mem[${addr}] ← ${state.registers[reg]}`, 'step');
+                    break;
+                }
+
+                case 'LOADM': {
+                    if (operands.length < 2) throw new Error('LOADM requiere: Rn, dirección');
+                    const reg = operands[0].toUpperCase();
+                    const addr = parseInt(operands[1]);
+                    if (isNaN(addr) || addr < 0 || addr >= 16) throw new Error(`Dirección inválida: ${operands[1]}`);
+                    setRegister(reg, state.memory[addr]);
+                    logConsole(`LOADM ${reg} ← mem[${addr}] = ${state.memory[addr]}`, 'step');
+                    break;
+                }
+
+                case 'JMP': {
+                    const label = operands[0].toUpperCase();
+                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
+                    state.programCounter = state.labels[label];
+                    logConsole(`JMP → ${label} (línea ${state.labels[label] + 1})`, 'step');
+                    return; // No incrementar PC
+                }
+
+                case 'JZ': {
+                    const label = operands[0].toUpperCase();
+                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
+                    if (state.flags.Z === 1) {
+                        state.programCounter = state.labels[label];
+                        logConsole(`JZ → ${label} (SALTADO, Z=1)`, 'step');
+                        return;
+                    }
+                    logConsole(`JZ → ${label} (no saltado, Z=0)`, 'step');
+                    break;
+                }
+
+                case 'JNZ': {
+                    const label = operands[0].toUpperCase();
+                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
+                    if (state.flags.Z === 0) {
+                        state.programCounter = state.labels[label];
+                        logConsole(`JNZ → ${label} (SALTADO, Z=0)`, 'step');
+                        return;
+                    }
+                    logConsole(`JNZ → ${label} (no saltado, Z=1)`, 'step');
+                    break;
+                }
+
+                case 'JL': {
+                    const label = operands[0].toUpperCase();
+                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
+                    if (state.flags.N === 1) {
+                        state.programCounter = state.labels[label];
+                        logConsole(`JL → ${label} (SALTADO, N=1)`, 'step');
+                        return;
+                    }
+                    logConsole(`JL → ${label} (no saltado)`, 'step');
+                    break;
+                }
+
+                case 'JG': {
+                    const label = operands[0].toUpperCase();
+                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
+                    if (state.flags.Z === 0 && state.flags.N === 0) {
+                        state.programCounter = state.labels[label];
+                        logConsole(`JG → ${label} (SALTADO)`, 'step');
+                        return;
+                    }
+                    logConsole(`JG → ${label} (no saltado)`, 'step');
+                    break;
+                }
+
+                case 'HALT': {
+                    state.halted = true;
+                    state.running = false;
+                    logConsole('HALT — Ejecución detenida.', 'warn');
+                    break;
+                }
+
+                case 'MOV': {
+                    if (operands.length < 2) throw new Error('MOV requiere: Rn, Rm');
+                    const dest = operands[0].toUpperCase();
+                    const val = parseOperand(operands[1]);
+                    setRegister(dest, val);
+                    logConsole(`MOV ${dest} ← ${val}`, 'step');
+                    break;
+                }
+
+                case 'CLEAR':
+                case 'CLR': {
+                    if (operands.length < 1) throw new Error('CLR requiere: Rn');
+                    const reg = operands[0].toUpperCase();
+                    setRegister(reg, 0);
+                    logConsole(`CLR ${reg} = 0`, 'step');
+                    break;
+                }
+
+                default:
+                    throw new Error(`Instrucción desconocida: ${opcode}`);
+            }
+
+            state.programCounter++;
+        }
+
+        // ==================== CONTROL DE EJECUCIÓN ====================
+        function runProgram() {
+            if (state.running) return;
+
+            const code = document.getElementById('codeEditor').value;
+            if (!code.trim()) {
+                logConsole('Error: No hay código para ejecutar.', 'error');
+                return;
+            }
+
+            resetState();
+            clearConsole();
+
+            try {
+                const parsed = parseProgram(code);
+                state.instructions = parsed.instructions;
+                state.labels = parsed.labels;
+                state.running = true;
+                state.halted = false;
+                state.programCounter = 0;
+
+                logConsole('━━━ Ejecución iniciada ━━━', 'info');
+                executeAll();
+            } catch (e) {
+                logConsole(`Error de parsing: ${e.message}`, 'error');
+                state.running = false;
+            }
+        }
+
+        function executeAll() {
+            const speed = 1050 - document.getElementById('speedRange').value;
+            let maxSteps = 10000; // Prevenir loops infinitos
+
+            function step() {
+                if (!state.running || state.halted || state.programCounter >= state.instructions.length) {
+                    if (state.programCounter >= state.instructions.length && !state.halted) {
+                        logConsole('━━━ Programa finalizado ━━━', 'info');
+                    }
+                    state.running = false;
+                    return;
+                }
+
+                if (maxSteps-- <= 0) {
+                    logConsole('Error: Límite de instrucciones alcanzado (posible loop infinito)', 'error');
+                    state.running = false;
+                    return;
+                }
+
+                try {
+                    const instr = state.instructions[state.programCounter];
+                    logConsole(`[PC:${state.programCounter}] ${instr.raw}`, 'step');
+                    executeInstruction(instr);
+                } catch (e) {
+                    logConsole(`Error en línea ${state.instructions[state.programCounter].lineNum}: ${e.message}`, 'error');
+                    state.running = false;
+                    return;
+                }
+
+                if (state.stepMode) {
+                    state.stepMode = false;
+                    state.running = false;
+                    return;
+                }
+
+                state.stepTimeout = setTimeout(step, speed);
+            }
+
+            step();
+        }
+
+        function stepProgram() {
+            if (state.running && !state.stepMode) return;
+
+            const code = document.getElementById('codeEditor').value;
+            if (!code.trim()) {
+                logConsole('Error: No hay código para ejecutar.', 'error');
+                return;
+            }
+
+            // Si no está corriendo, inicializar
+            if (!state.running) {
+                if (state.programCounter === 0 || state.halted || state.programCounter >= state.instructions.length) {
+                    resetState();
+                    clearConsole();
+                    try {
+                        const parsed = parseProgram(code);
+                        state.instructions = parsed.instructions;
+                        state.labels = parsed.labels;
+                        logConsole('━━━ Modo paso a paso ━━━', 'info');
+                    } catch (e) {
+                        logConsole(`Error de parsing: ${e.message}`, 'error');
+                        return;
+                    }
+                }
+                state.running = true;
+                state.stepMode = true;
+                state.halted = false;
+                executeAll();
+            } else {
+                state.stepMode = true;
+                executeAll();
+            }
+        }
+
+        function resetSimulator() {
+            if (state.stepTimeout) clearTimeout(state.stepTimeout);
+            resetState();
+            clearConsole();
+            logConsole('[Sistema] Simulador reiniciado.', 'info');
+        }
+
+        function resetState() {
+            if (state.stepTimeout) clearTimeout(state.stepTimeout);
+            for (let r in state.registers) state.registers[r] = 0;
+            state.memory.fill(0);
+            state.flags = { Z: 0, N: 0, C: 0, O: 0 };
+            state.programCounter = 0;
+            state.instructions = [];
+            state.labels = {};
+            state.running = false;
+            state.halted = false;
+            state.stepMode = false;
+            updateAllDisplays();
+        }
+
+        // ==================== ACTUALIZACIÓN DE DISPLAY ====================
+        function updateRegisterDisplay(reg) {
+            const el = document.getElementById(`reg-${reg}`);
+            if (el) {
+                el.querySelector('.reg-value').textContent = state.registers[reg];
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 500);
+            }
+        }
+
+        function updateMemoryDisplay(addr) {
+            const el = document.getElementById(`mem-${addr}`);
+            if (el) {
+                el.querySelector('.val').textContent = state.memory[addr];
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 500);
+            }
+        }
+
+        function updateFlagsDisplay() {
+            document.getElementById('flag-Z').textContent = state.flags.Z;
+            document.getElementById('flag-Z').className = `flag-val ${state.flags.Z ? 'on' : ''}`;
+            document.getElementById('flag-N').textContent = state.flags.N;
+            document.getElementById('flag-N').className = `flag-val ${state.flags.N ? 'on' : ''}`;
+            document.getElementById('flag-C').textContent = state.flags.C;
+            document.getElementById('flag-C').className = `flag-val ${state.flags.C ? 'on' : ''}`;
+            document.getElementById('flag-O').textContent = state.flags.O;
+            document.getElementById('flag-O').className = `flag-val ${state.flags.O ? 'on' : ''}`;
+        }
+
+        function updateAllDisplays() {
+            for (let r in state.registers) {
+                const el = document.getElementById(`reg-${r}`);
+                if (el) el.querySelector('.reg-value').textContent = state.registers[r];
+            }
+            for (let i = 0; i < 16; i++) {
+                const el = document.getElementById(`mem-${i}`);
+                if (el) el.querySelector('.val').textContent = state.memory[i];
+            }
+            updateFlagsDisplay();
+        }
+
+        // ==================== CONSOLA ====================
+        function logConsole(message, type = 'info') {
+            const output = document.getElementById('consoleOutput');
+            const line = document.createElement('div');
+            line.className = `log-${type}`;
+            line.textContent = message;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleOutput').innerHTML = '';
+        }
+
+        // ==================== EJEMPLOS ====================
+        function loadExample(num) {
+            const editor = document.getElementById('codeEditor');
+            resetSimulator();
+
+            const examples = {
+                1: `; === Ejemplo 1: Operaciones básicas ===
+; Cargar dos números y operar con ellos
+
+LOAD R1, 25      ; Primer número
+LOAD R2, 7       ; Segundo número
+
+; Suma
+ADD R1, R2       ; R1 = 25 + 7 = 32
+PRINT R1
+
+; Resta
+LOAD R1, 50
+SUB R1, R2       ; R1 = 50 - 7 = 43
+PRINT R1
+
+; Multiplicación
+LOAD R1, 6
+LOAD R2, 8
+MUL R1, R2       ; R1 = 6 * 8 = 48
+PRINT R1
+
+; División
+LOAD R1, 100
+LOAD R2, 4
+DIV R1, R2       ; R1 = 100 / 4 = 25
+PRINT R1
+
+HALT`,
+
+                2: `; === Ejemplo 2: Uso de memoria ===
+; Guardar y recuperar valores de memoria
+
+LOAD R1, 42      ; Cargar valor
+STORE R1, 0      ; Guardar en memoria[0]
+
+LOAD R1, 99      ; Cargar otro valor
+STORE R1, 1      ; Guardar en memoria[1]
+
+; Recuperar y sumar
+LOADM R2, 0      ; R2 = memoria[0] = 42
+LOADM R3, 1      ; R3 = memoria[1] = 99
+ADD R2, R3       ; R2 = 42 + 99 = 141
+PRINT R2
+
+HALT`,
+
+                3: `; === Ejemplo 3: Contador con saltos ===
+; Cuenta del 1 al 5 usando bucle
+
+LOAD R1, 0       ; Contador = 0
+LOAD R2, 5       ; Límite = 5
+LOAD R3, 1       ; Incremento = 1
+
+INICIO:
+    INC R1           ; contador++
+    PRINT R1         ; mostrar contador
+    CMP R1, R2       ; comparar con límite
+    JL INICIO        ; si es menor, repetir
+
+HALT`
+            };
+
+            editor.value = examples[num] || '';
+            updateLineNumbers();
+            logConsole(`Ejemplo ${num} cargado.`, 'info');
+        }
+
+        // ==================== INICIALIZACIÓN ====================
+        window.onload = function () {
+            initMemoryGrid();
+            initEditor();
+        };
+    </script>
+</body>
+</html>
