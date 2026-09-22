@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Ensamblaje Básico - Con Misiones</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Courier New', monospace;
@@ -35,10 +31,7 @@
             text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
         }
 
-        header .subtitle {
-            font-size: 0.8rem;
-            color: #7a7a9a;
-        }
+        header .subtitle { font-size: 0.8rem; color: #7a7a9a; }
 
         .main-container {
             display: grid;
@@ -66,11 +59,7 @@
             align-items: center;
         }
 
-        .code-area {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
+        .code-area { flex: 1; display: flex; overflow: hidden; }
 
         .line-numbers {
             background: #0d0d18;
@@ -98,9 +87,7 @@
             tab-size: 4;
         }
 
-        #codeEditor::placeholder {
-            color: #2a2a4a;
-        }
+        #codeEditor::placeholder { color: #2a2a4a; }
 
         .controls {
             background: #12121f;
@@ -128,15 +115,18 @@
             box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
         }
 
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
         .btn-run {
             border-color: #00c853;
             color: #00c853;
             background: linear-gradient(180deg, #0a2a1a, #051a0f);
         }
 
-        .btn-run:hover {
-            box-shadow: 0 0 10px rgba(0, 200, 83, 0.3);
-        }
+        .btn-run:hover { box-shadow: 0 0 10px rgba(0, 200, 83, 0.3); }
 
         .btn-step {
             border-color: #ffab00;
@@ -144,9 +134,7 @@
             background: linear-gradient(180deg, #2a1f0a, #1a150a);
         }
 
-        .btn-step:hover {
-            box-shadow: 0 0 10px rgba(255, 171, 0, 0.3);
-        }
+        .btn-step:hover { box-shadow: 0 0 10px rgba(255, 171, 0, 0.3); }
 
         .btn-reset {
             border-color: #ff5252;
@@ -154,9 +142,7 @@
             background: linear-gradient(180deg, #2a0a0a, #1a0505);
         }
 
-        .btn-reset:hover {
-            box-shadow: 0 0 10px rgba(255, 82, 82, 0.3);
-        }
+        .btn-reset:hover { box-shadow: 0 0 10px rgba(255, 82, 82, 0.3); }
 
         .btn-mission {
             border-color: #ffd700;
@@ -164,9 +150,7 @@
             background: linear-gradient(180deg, #2a2a0a, #1a1a05);
         }
 
-        .btn-mission:hover {
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-        }
+        .btn-mission:hover { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
 
         .side-panel {
             display: flex;
@@ -174,12 +158,12 @@
             overflow-y: auto;
         }
 
-        .registers-section {
+        .registers-section, .flags-section, .memory-section, .help-section {
             padding: 15px;
             border-bottom: 1px solid #1a1a3e;
         }
 
-        .registers-section h3 {
+        .registers-section h3, .flags-section h3, .memory-section h3, .help-section h3 {
             color: #00d4ff;
             font-size: 0.85rem;
             margin-bottom: 12px;
@@ -207,32 +191,10 @@
             box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
         }
 
-        .register-item .reg-name {
-            color: #7a7a9a;
-            font-size: 0.75rem;
-        }
+        .register-item .reg-name { color: #7a7a9a; font-size: 0.75rem; }
+        .register-item .reg-value { color: #00ff88; font-size: 0.9rem; font-weight: bold; }
 
-        .register-item .reg-value {
-            color: #00ff88;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        .flags-section {
-            padding: 15px;
-            border-bottom: 1px solid #1a1a3e;
-        }
-
-        .flags-section h3 {
-            color: #00d4ff;
-            font-size: 0.85rem;
-            margin-bottom: 12px;
-        }
-
-        .flags-grid {
-            display: flex;
-            gap: 10px;
-        }
+        .flags-grid { display: flex; gap: 10px; }
 
         .flag-item {
             background: #0d0d18;
@@ -242,29 +204,9 @@
             font-size: 0.75rem;
         }
 
-        .flag-item .flag-name {
-            color: #7a7a9a;
-        }
-
-        .flag-item .flag-val {
-            color: #ff5252;
-            font-weight: bold;
-        }
-
-        .flag-item .flag-val.on {
-            color: #00ff88;
-        }
-
-        .memory-section {
-            padding: 15px;
-            border-bottom: 1px solid #1a1a3e;
-        }
-
-        .memory-section h3 {
-            color: #00d4ff;
-            font-size: 0.85rem;
-            margin-bottom: 12px;
-        }
+        .flag-item .flag-name { color: #7a7a9a; }
+        .flag-item .flag-val { color: #ff5252; font-weight: bold; }
+        .flag-item .flag-val.on { color: #00ff88; }
 
         .memory-grid {
             display: grid;
@@ -281,29 +223,9 @@
             font-size: 0.7rem;
         }
 
-        .memory-cell .addr {
-            color: #5a5a7a;
-            font-size: 0.6rem;
-        }
-
-        .memory-cell .val {
-            color: #ffab00;
-            font-size: 0.8rem;
-        }
-
-        .memory-cell.active {
-            border-color: #ffab00;
-        }
-
-        .help-section {
-            padding: 15px;
-        }
-
-        .help-section h3 {
-            color: #00d4ff;
-            font-size: 0.85rem;
-            margin-bottom: 10px;
-        }
+        .memory-cell .addr { color: #5a5a7a; font-size: 0.6rem; }
+        .memory-cell .val { color: #ffab00; font-size: 0.8rem; }
+        .memory-cell.active { border-color: #ffab00; }
 
         .help-item {
             font-size: 0.7rem;
@@ -323,7 +245,7 @@
             grid-column: 1 / -1;
             background: #080810;
             border-top: 2px solid #1a1a3e;
-            max-height: 200px;
+            max-height: 220px;
             display: flex;
             flex-direction: column;
         }
@@ -336,29 +258,18 @@
             line-height: 1.5;
         }
 
-        .console-output .log-info {
-            color: #00d4ff;
-        }
-
-        .console-output .log-success {
-            color: #00ff88;
-        }
-
-        .console-output .log-error {
-            color: #ff5252;
-        }
-
-        .console-output .log-warn {
-            color: #ffab00;
-        }
-
-        .console-output .log-output {
-            color: #e0e0e0;
-        }
-
-        .console-output .log-step {
-            color: #7a7a9a;
-            font-size: 0.75rem;
+        .console-output .log-info { color: #00d4ff; }
+        .console-output .log-success { color: #00ff88; font-weight: bold; }
+        .console-output .log-error { color: #ff5252; }
+        .console-output .log-warn { color: #ffab00; }
+        .console-output .log-output { color: #e0e0e0; }
+        .console-output .log-step { color: #7a7a9a; font-size: 0.75rem; }
+        .console-output .log-mission {
+            color: #ffd700;
+            background: #1a1a0a;
+            padding: 4px 8px;
+            border-left: 3px solid #ffd700;
+            margin: 4px 0;
         }
 
         .speed-control {
@@ -368,33 +279,22 @@
             margin-left: auto;
         }
 
-        .speed-control label {
-            font-size: 0.75rem;
-            color: #7a7a9a;
-        }
+        .speed-control label { font-size: 0.75rem; color: #7a7a9a; }
+        .speed-control input[type="range"] { width: 80px; accent-color: #00d4ff; }
 
-        .speed-control input[type="range"] {
-            width: 80px;
-            accent-color: #00d4ff;
-        }
-
-        /* Modal de Misiones */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
 
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
 
         .modal-content {
             background: #12121f;
@@ -414,12 +314,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .modal-header h2 {
-            color: #ffd700;
-            font-size: 1.3rem;
-        }
+        .modal-header h2 { color: #ffd700; font-size: 1.3rem; }
 
         .modal-close {
             background: none;
@@ -430,9 +330,7 @@
             padding: 0 10px;
         }
 
-        .modal-body {
-            padding: 20px;
-        }
+        .modal-body { padding: 20px; }
 
         .mission-tabs {
             display: flex;
@@ -458,22 +356,12 @@
             border-color: #00d4ff;
         }
 
-        .mission-tab:hover {
-            background: #1a1a3e;
-        }
+        .mission-tab:hover { background: #1a1a3e; }
 
-        .mission-category {
-            display: none;
-        }
+        .mission-category { display: none; }
+        .mission-category.active { display: block; }
 
-        .mission-category.active {
-            display: block;
-        }
-
-        .mission-list {
-            display: grid;
-            gap: 15px;
-        }
+        .mission-list { display: grid; gap: 15px; }
 
         .mission-item {
             background: #0d0d18;
@@ -484,7 +372,7 @@
             transition: all 0.3s;
         }
 
-        .mission-item:hover {
+        .mission-item:hover:not(.locked) {
             border-color: #00d4ff;
             box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
         }
@@ -506,15 +394,7 @@
             margin-bottom: 10px;
         }
 
-        .mission-title {
-            color: #00d4ff;
-            font-size: 1rem;
-            font-weight: bold;
-        }
-
-        .mission-status {
-            font-size: 1.2rem;
-        }
+        .mission-title { color: #00d4ff; font-size: 1rem; font-weight: bold; }
 
         .mission-description {
             color: #7a7a9a;
@@ -531,18 +411,9 @@
             margin-top: 10px;
         }
 
-        .mission-objective-title {
-            color: #ffd700;
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-        }
+        .mission-objective-title { color: #ffd700; font-size: 0.8rem; margin-bottom: 5px; }
+        .mission-objective-text { color: #e0e0e0; font-size: 0.85rem; }
 
-        .mission-objective-text {
-            color: #e0e0e0;
-            font-size: 0.85rem;
-        }
-
-        /* Tutorial */
         .tutorial-step {
             background: #0d0d18;
             border: 2px solid #00d4ff;
@@ -551,16 +422,9 @@
             margin-bottom: 15px;
         }
 
-        .tutorial-step h3 {
-            color: #00d4ff;
-            margin-bottom: 15px;
-        }
-
-        .tutorial-step p {
-            color: #e0e0e0;
-            line-height: 1.6;
-            margin-bottom: 10px;
-        }
+        .tutorial-step h3 { color: #00d4ff; margin-bottom: 15px; }
+        .tutorial-step p { color: #e0e0e0; line-height: 1.6; margin-bottom: 10px; }
+        .tutorial-step ul { color: #e0e0e0; line-height: 1.8; }
 
         .tutorial-code {
             background: #1a1a2e;
@@ -569,11 +433,14 @@
             border-left: 3px solid #00ff88;
             margin: 10px 0;
             font-family: 'Courier New', monospace;
+            color: #c8d6e5;
+            line-height: 1.6;
         }
 
         .tutorial-nav {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-top: 20px;
         }
 
@@ -581,8 +448,8 @@
             background: #0d0d18;
             border: 1px solid #1a1a3e;
             border-radius: 4px;
-            height: 20px;
-            margin: 10px 0;
+            height: 24px;
+            margin: 10px 0 20px;
             overflow: hidden;
         }
 
@@ -596,6 +463,7 @@
             color: #0a0a0f;
             font-size: 0.75rem;
             font-weight: bold;
+            min-width: 40px;
         }
 
         .badge {
@@ -607,55 +475,64 @@
             margin-left: 10px;
         }
 
-        .badge-new {
-            background: #ffd700;
-            color: #0a0a0f;
+        .badge-new { background: #ffd700; color: #0a0a0f; }
+        .badge-completed { background: #00c853; color: #0a0a0f; }
+
+        .mission-banner {
+            background: linear-gradient(135deg, #1a1a0a, #0f0f05);
+            border: 2px solid #ffd700;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            display: none;
         }
 
-        .badge-completed {
-            background: #00c853;
-            color: #0a0a0f;
+        .mission-banner.active { display: block; }
+
+        .mission-banner-title {
+            color: #ffd700;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
 
-        ::-webkit-scrollbar {
-            width: 8px;
+        .mission-banner-obj {
+            color: #e0e0e0;
+            font-size: 0.8rem;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #0a0a14;
+        .mission-banner-close {
+            float: right;
+            background: none;
+            border: none;
+            color: #ff5252;
+            cursor: pointer;
+            font-size: 1rem;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #2a2a4a;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3a3a5a;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a14; }
+        ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3a3a5a; }
 
         @media (max-width: 900px) {
             .main-container {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto auto;
             }
-
             .editor-panel {
                 border-right: none;
                 border-bottom: 2px solid #1a1a3e;
                 min-height: 300px;
             }
-
-            .side-panel {
-                max-height: 300px;
-            }
+            .side-panel { max-height: 300px; }
         }
     </style>
 </head>
 <body>
     <header>
         <div>
-            <h1>⚡ ASM Simulator v2.0</h1>
+            <h1>⚡ ASM Simulator v2.1</h1>
             <div class="subtitle">Simulador de Ensamblaje con Misiones y Tutorial</div>
         </div>
     </header>
@@ -665,6 +542,11 @@
             <div class="panel-header">
                 <span>📝 Editor de Código</span>
                 <span id="lineInfo">Línea: 1</span>
+            </div>
+            <div class="mission-banner" id="missionBanner">
+                <button class="mission-banner-close" onclick="clearCurrentMission()">×</button>
+                <div class="mission-banner-title" id="bannerTitle">🎯 Misión activa</div>
+                <div class="mission-banner-obj" id="bannerObj"></div>
             </div>
             <div class="code-area">
                 <div class="line-numbers" id="lineNumbers">1</div>
@@ -694,60 +576,24 @@ PRINT R1"></textarea>
             <div class="registers-section">
                 <h3>📊 Registros</h3>
                 <div class="register-grid" id="registerGrid">
-                    <div class="register-item" id="reg-R0">
-                        <span class="reg-name">R0</span>
-                        <span class="reg-value">0</span>
-                    </div>
-                    <div class="register-item" id="reg-R1">
-                        <span class="reg-name">R1</span>
-                        <span class="reg-value">0</span>
-                    </div>
-                    <div class="register-item" id="reg-R2">
-                        <span class="reg-name">R2</span>
-                        <span class="reg-value">0</span>
-                    </div>
-                    <div class="register-item" id="reg-R3">
-                        <span class="reg-name">R3</span>
-                        <span class="reg-value">0</span>
-                    </div>
-                    <div class="register-item" id="reg-R4">
-                        <span class="reg-name">R4</span>
-                        <span class="reg-value">0</span>
-                    </div>
-                    <div class="register-item" id="reg-R5">
-                        <span class="reg-name">R5</span>
-                        <span class="reg-value">0</span>
-                    </div>
-                    <div class="register-item" id="reg-R6">
-                        <span class="reg-name">R6</span>
-                        <span class="reg-value">0</span>
-                    </div>
-                    <div class="register-item" id="reg-R7">
-                        <span class="reg-name">R7</span>
-                        <span class="reg-value">0</span>
-                    </div>
+                    <div class="register-item" id="reg-R0"><span class="reg-name">R0</span><span class="reg-value">0</span></div>
+                    <div class="register-item" id="reg-R1"><span class="reg-name">R1</span><span class="reg-value">0</span></div>
+                    <div class="register-item" id="reg-R2"><span class="reg-name">R2</span><span class="reg-value">0</span></div>
+                    <div class="register-item" id="reg-R3"><span class="reg-name">R3</span><span class="reg-value">0</span></div>
+                    <div class="register-item" id="reg-R4"><span class="reg-name">R4</span><span class="reg-value">0</span></div>
+                    <div class="register-item" id="reg-R5"><span class="reg-name">R5</span><span class="reg-value">0</span></div>
+                    <div class="register-item" id="reg-R6"><span class="reg-name">R6</span><span class="reg-value">0</span></div>
+                    <div class="register-item" id="reg-R7"><span class="reg-name">R7</span><span class="reg-value">0</span></div>
                 </div>
             </div>
 
             <div class="flags-section">
                 <h3>🚩 Banderas (Flags)</h3>
                 <div class="flags-grid">
-                    <div class="flag-item">
-                        <span class="flag-name">ZERO: </span>
-                        <span class="flag-val" id="flag-Z">0</span>
-                    </div>
-                    <div class="flag-item">
-                        <span class="flag-name">NEG: </span>
-                        <span class="flag-val" id="flag-N">0</span>
-                    </div>
-                    <div class="flag-item">
-                        <span class="flag-name">CARRY: </span>
-                        <span class="flag-val" id="flag-C">0</span>
-                    </div>
-                    <div class="flag-item">
-                        <span class="flag-name">OVER: </span>
-                        <span class="flag-val" id="flag-O">0</span>
-                    </div>
+                    <div class="flag-item"><span class="flag-name">ZERO: </span><span class="flag-val" id="flag-Z">0</span></div>
+                    <div class="flag-item"><span class="flag-name">NEG: </span><span class="flag-val" id="flag-N">0</span></div>
+                    <div class="flag-item"><span class="flag-name">CARRY: </span><span class="flag-val" id="flag-C">0</span></div>
+                    <div class="flag-item"><span class="flag-name">OVER: </span><span class="flag-val" id="flag-O">0</span></div>
                 </div>
             </div>
 
@@ -796,28 +642,18 @@ PRINT R1"></textarea>
             </div>
             <div class="modal-body">
                 <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
+                    <div class="progress-fill" id="progressBar" style="width: 0%">0/20</div>
                 </div>
-                
                 <div class="mission-tabs">
-                    <div class="mission-tab active" onclick="switchMissionTab('suma')">Suma</div>
-                    <div class="mission-tab" onclick="switchMissionTab('resta')">Resta</div>
-                    <div class="mission-tab" onclick="switchMissionTab('multiplicacion')">Multiplicación</div>
-                    <div class="mission-tab" onclick="switchMissionTab('division')">División</div>
+                    <div class="mission-tab active" data-cat="suma" onclick="switchMissionTab(this, 'suma')">Suma</div>
+                    <div class="mission-tab" data-cat="resta" onclick="switchMissionTab(this, 'resta')">Resta</div>
+                    <div class="mission-tab" data-cat="multiplicacion" onclick="switchMissionTab(this, 'multiplicacion')">Multiplicación</div>
+                    <div class="mission-tab" data-cat="division" onclick="switchMissionTab(this, 'division')">División</div>
                 </div>
-
-                <div class="mission-category active" id="mission-suma">
-                    <div class="mission-list" id="missionList-suma"></div>
-                </div>
-                <div class="mission-category" id="mission-resta">
-                    <div class="mission-list" id="missionList-resta"></div>
-                </div>
-                <div class="mission-category" id="mission-multiplicacion">
-                    <div class="mission-list" id="missionList-multiplicacion"></div>
-                </div>
-                <div class="mission-category" id="mission-division">
-                    <div class="mission-list" id="missionList-division"></div>
-                </div>
+                <div class="mission-category active" id="mission-suma"><div class="mission-list" id="missionList-suma"></div></div>
+                <div class="mission-category" id="mission-resta"><div class="mission-list" id="missionList-resta"></div></div>
+                <div class="mission-category" id="mission-multiplicacion"><div class="mission-list" id="missionList-multiplicacion"></div></div>
+                <div class="mission-category" id="mission-division"><div class="mission-list" id="missionList-division"></div></div>
             </div>
         </div>
     </div>
@@ -829,14 +665,12 @@ PRINT R1"></textarea>
                 <h2>📚 Tutorial Básico</h2>
                 <button class="modal-close" onclick="closeTutorial()">×</button>
             </div>
-            <div class="modal-body" id="tutorialContent">
-                <!-- Contenido dinámico del tutorial -->
-            </div>
+            <div class="modal-body" id="tutorialContent"></div>
         </div>
     </div>
 
     <script>
-        // ==================== ESTADO DEL SIMULADOR ====================
+        // ==================== ESTADO ====================
         const state = {
             registers: { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0 },
             memory: new Array(16).fill(0),
@@ -851,7 +685,16 @@ PRINT R1"></textarea>
             currentMission: null
         };
 
-        // ==================== SISTEMA DE MISIONES ====================
+        // ==================== MISIONES ====================
+        // Verificación matemática de cada misión:
+        // suma-1: 7+8=15 ✓ | suma-2: 10+12+8=30 ✓ | suma-3: 25+17=42 → mem[0] ✓
+        // suma-4: 0+5×1=5 ✓ | suma-5: (5+3)+(8+4)=8+12=20 ✓
+        // resta-1: 15-8=7 ✓ | resta-2: 30-10-15=5 ✓ | resta-3: 10-7=3 ✓
+        // resta-4: 25-18=7 ✓ | resta-5: (50-20)-(15-5)=30-10=20 ✓
+        // mult-1: 6×4=24 ✓ | mult-2: 3×4×5=60 ✓ | mult-3: 7×7=49 ✓
+        // mult-4: 0+6×5=30 ✓ | mult-5: (3×4)×(2×5)=12×10=120 ✓
+        // div-1: 20÷4=5 ✓ | div-2: floor(15÷2)=7 ✓ | div-3: 15 mod 2=1 ✓
+        // div-4: 120÷6÷10=20÷10=2 ✓ | div-5: 17÷5=3, 17 mod 5=2 ✓
         const missions = {
             suma: [
                 {
@@ -859,12 +702,7 @@ PRINT R1"></textarea>
                     title: 'Primera Suma',
                     description: 'Carga dos números y súmalos',
                     objective: 'Resultado en R1 debe ser 15 (7 + 8)',
-                    code: `; Misión 1: Suma básica
-LOAD R1, 7
-LOAD R2, 8
-ADD R1, R2
-PRINT R1
-HALT`,
+                    code: `; Misión 1: Suma básica\nLOAD R1, 7\nLOAD R2, 8\nADD R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 15
                 },
                 {
@@ -872,14 +710,7 @@ HALT`,
                     title: 'Suma Tres Números',
                     description: 'Suma tres números diferentes',
                     objective: 'Resultado en R1 debe ser 30 (10 + 12 + 8)',
-                    code: `; Misión 2: Suma tres números
-LOAD R1, 10
-LOAD R2, 12
-LOAD R3, 8
-ADD R1, R2
-ADD R1, R3
-PRINT R1
-HALT`,
+                    code: `; Misión 2: Suma tres números\nLOAD R1, 10\nLOAD R2, 12\nLOAD R3, 8\nADD R1, R2\nADD R1, R3\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 30
                 },
                 {
@@ -887,13 +718,7 @@ HALT`,
                     title: 'Suma con Memoria',
                     description: 'Usa la memoria para almacenar resultados',
                     objective: 'Guardar suma de 25 + 17 en memoria[0]',
-                    code: `; Misión 3: Suma con memoria
-LOAD R1, 25
-LOAD R2, 17
-ADD R1, R2
-STORE R1, 0
-PRINT R1
-HALT`,
+                    code: `; Misión 3: Suma con memoria\nLOAD R1, 25\nLOAD R2, 17\nADD R1, R2\nSTORE R1, 0\nPRINT R1\nHALT`,
                     validate: () => state.memory[0] === 42
                 },
                 {
@@ -901,15 +726,7 @@ HALT`,
                     title: 'Suma Incremental',
                     description: 'Usa INC para sumar 1 repetidamente',
                     objective: 'R1 debe ser 5 después de 5 incrementos',
-                    code: `; Misión 4: Suma incremental
-LOAD R1, 0
-INC R1
-INC R1
-INC R1
-INC R1
-INC R1
-PRINT R1
-HALT`,
+                    code: `; Misión 4: Suma incremental\nLOAD R1, 0\nINC R1\nINC R1\nINC R1\nINC R1\nINC R1\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 5
                 },
                 {
@@ -917,16 +734,7 @@ HALT`,
                     title: 'Suma Compleja',
                     description: 'Calcula (5 + 3) + (8 + 4)',
                     objective: 'Resultado final en R1 debe ser 20',
-                    code: `; Misión 5: Suma compleja
-LOAD R1, 5
-LOAD R2, 3
-ADD R1, R2      ; R1 = 8
-LOAD R3, 8
-LOAD R4, 4
-ADD R3, R4      ; R3 = 12
-ADD R1, R3      ; R1 = 8 + 12 = 20
-PRINT R1
-HALT`,
+                    code: `; Misión 5: Suma compleja\nLOAD R1, 5\nLOAD R2, 3\nADD R1, R2\nLOAD R3, 8\nLOAD R4, 4\nADD R3, R4\nADD R1, R3\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 20
                 }
             ],
@@ -936,12 +744,7 @@ HALT`,
                     title: 'Primera Resta',
                     description: 'Resta dos números',
                     objective: 'Resultado en R1 debe ser 7 (15 - 8)',
-                    code: `; Misión 1: Resta básica
-LOAD R1, 15
-LOAD R2, 8
-SUB R1, R2
-PRINT R1
-HALT`,
+                    code: `; Misión 1: Resta básica\nLOAD R1, 15\nLOAD R2, 8\nSUB R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 7
                 },
                 {
@@ -949,14 +752,7 @@ HALT`,
                     title: 'Resta Múltiple',
                     description: 'Resta tres números secuencialmente',
                     objective: 'Resultado en R1 debe ser 5 (30 - 10 - 15)',
-                    code: `; Misión 2: Resta múltiple
-LOAD R1, 30
-LOAD R2, 10
-LOAD R3, 15
-SUB R1, R2      ; R1 = 20
-SUB R1, R3      ; R1 = 5
-PRINT R1
-HALT`,
+                    code: `; Misión 2: Resta múltiple\nLOAD R1, 30\nLOAD R2, 10\nLOAD R3, 15\nSUB R1, R2\nSUB R1, R3\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 5
                 },
                 {
@@ -964,30 +760,15 @@ HALT`,
                     title: 'Resta con Decremento',
                     description: 'Usa DEC para restar 1 repetidamente',
                     objective: 'R1 debe ser 3 después de 7 decrementos desde 10',
-                    code: `; Misión 3: Resta con decremento
-LOAD R1, 10
-DEC R1
-DEC R1
-DEC R1
-DEC R1
-DEC R1
-DEC R1
-DEC R1
-PRINT R1
-HALT`,
+                    code: `; Misión 3: Resta con decremento\nLOAD R1, 10\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 3
                 },
                 {
                     id: 'resta-4',
                     title: 'Diferencia Positiva',
                     description: 'Calcula la diferencia entre dos números',
-                    objective: 'R1 debe contener |25 - 18| = 7',
-                    code: `; Misión 4: Diferencia positiva
-LOAD R1, 25
-LOAD R2, 18
-SUB R1, R2
-PRINT R1
-HALT`,
+                    objective: 'R1 debe contener 25 - 18 = 7',
+                    code: `; Misión 4: Diferencia positiva\nLOAD R1, 25\nLOAD R2, 18\nSUB R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 7
                 },
                 {
@@ -995,16 +776,7 @@ HALT`,
                     title: 'Resta Combinada',
                     description: 'Calcula (50 - 20) - (15 - 5)',
                     objective: 'Resultado final en R1 debe ser 20',
-                    code: `; Misión 5: Resta combinada
-LOAD R1, 50
-LOAD R2, 20
-SUB R1, R2      ; R1 = 30
-LOAD R3, 15
-LOAD R4, 5
-SUB R3, R4      ; R3 = 10
-SUB R1, R3      ; R1 = 30 - 10 = 20
-PRINT R1
-HALT`,
+                    code: `; Misión 5: Resta combinada\nLOAD R1, 50\nLOAD R2, 20\nSUB R1, R2\nLOAD R3, 15\nLOAD R4, 5\nSUB R3, R4\nSUB R1, R3\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 20
                 }
             ],
@@ -1014,12 +786,7 @@ HALT`,
                     title: 'Primera Multiplicación',
                     description: 'Multiplica dos números',
                     objective: 'Resultado en R1 debe ser 24 (6 × 4)',
-                    code: `; Misión 1: Multiplicación básica
-LOAD R1, 6
-LOAD R2, 4
-MUL R1, R2
-PRINT R1
-HALT`,
+                    code: `; Misión 1: Multiplicación básica\nLOAD R1, 6\nLOAD R2, 4\nMUL R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 24
                 },
                 {
@@ -1027,14 +794,7 @@ HALT`,
                     title: 'Multiplicación Triple',
                     description: 'Multiplica tres números',
                     objective: 'Resultado en R1 debe ser 60 (3 × 4 × 5)',
-                    code: `; Misión 2: Multiplicación triple
-LOAD R1, 3
-LOAD R2, 4
-LOAD R3, 5
-MUL R1, R2      ; R1 = 12
-MUL R1, R3      ; R1 = 60
-PRINT R1
-HALT`,
+                    code: `; Misión 2: Multiplicación triple\nLOAD R1, 3\nLOAD R2, 4\nLOAD R3, 5\nMUL R1, R2\nMUL R1, R3\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 60
                 },
                 {
@@ -1042,12 +802,7 @@ HALT`,
                     title: 'Cuadrado',
                     description: 'Calcula el cuadrado de un número',
                     objective: 'R1 debe ser 49 (7 × 7)',
-                    code: `; Misión 3: Cuadrado
-LOAD R1, 7
-LOAD R2, 7
-MUL R1, R2
-PRINT R1
-HALT`,
+                    code: `; Misión 3: Cuadrado\nLOAD R1, 7\nLOAD R2, 7\nMUL R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 49
                 },
                 {
@@ -1055,16 +810,7 @@ HALT`,
                     title: 'Multiplicación por Suma',
                     description: 'Simula 5 × 6 usando sumas repetidas',
                     objective: 'R1 debe ser 30 (sumar 6 cinco veces)',
-                    code: `; Misión 4: Multiplicación por suma
-LOAD R1, 0      ; Acumulador
-LOAD R2, 6      ; Número a sumar
-ADD R1, R2      ; 6
-ADD R1, R2      ; 12
-ADD R1, R2      ; 18
-ADD R1, R2      ; 24
-ADD R1, R2      ; 30
-PRINT R1
-HALT`,
+                    code: `; Misión 4: Multiplicación por suma\nLOAD R1, 0\nLOAD R2, 6\nADD R1, R2\nADD R1, R2\nADD R1, R2\nADD R1, R2\nADD R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 30
                 },
                 {
@@ -1072,16 +818,7 @@ HALT`,
                     title: 'Producto Complejo',
                     description: 'Calcula (3 × 4) × (2 × 5)',
                     objective: 'Resultado final en R1 debe ser 120',
-                    code: `; Misión 5: Producto complejo
-LOAD R1, 3
-LOAD R2, 4
-MUL R1, R2      ; R1 = 12
-LOAD R3, 2
-LOAD R4, 5
-MUL R3, R4      ; R3 = 10
-MUL R1, R3      ; R1 = 120
-PRINT R1
-HALT`,
+                    code: `; Misión 5: Producto complejo\nLOAD R1, 3\nLOAD R2, 4\nMUL R1, R2\nLOAD R3, 2\nLOAD R4, 5\nMUL R3, R4\nMUL R1, R3\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 120
                 }
             ],
@@ -1091,25 +828,15 @@ HALT`,
                     title: 'Primera División',
                     description: 'Divide dos números',
                     objective: 'Resultado en R1 debe ser 5 (20 ÷ 4)',
-                    code: `; Misión 1: División básica
-LOAD R1, 20
-LOAD R2, 4
-DIV R1, R2
-PRINT R1
-HALT`,
+                    code: `; Misión 1: División básica\nLOAD R1, 20\nLOAD R2, 4\nDIV R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 5
                 },
                 {
                     id: 'div-2',
                     title: 'División Entera',
-                    description: 'División con resultado entero',
-                    objective: 'R1 debe ser 7 (15 ÷ 2, parte entera)',
-                    code: `; Misión 2: División entera
-LOAD R1, 15
-LOAD R2, 2
-DIV R1, R2
-PRINT R1
-HALT`,
+                    description: 'División con resultado entero (truncado)',
+                    objective: 'R1 debe ser 7 (15 ÷ 2 = 7.5 → 7)',
+                    code: `; Misión 2: División entera\nLOAD R1, 15\nLOAD R2, 2\nDIV R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 7
                 },
                 {
@@ -1117,12 +844,7 @@ HALT`,
                     title: 'Módulo',
                     description: 'Calcula el residuo de una división',
                     objective: 'R1 debe ser 1 (15 mod 2)',
-                    code: `; Misión 3: Módulo
-LOAD R1, 15
-LOAD R2, 2
-MOD R1, R2
-PRINT R1
-HALT`,
+                    code: `; Misión 3: Módulo\nLOAD R1, 15\nLOAD R2, 2\nMOD R1, R2\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 1
                 },
                 {
@@ -1130,30 +852,15 @@ HALT`,
                     title: 'División en Cadena',
                     description: 'Divide secuencialmente',
                     objective: 'R1 debe ser 2 (120 ÷ 6 ÷ 10)',
-                    code: `; Misión 4: División en cadena
-LOAD R1, 120
-LOAD R2, 6
-LOAD R3, 10
-DIV R1, R2      ; R1 = 20
-DIV R1, R3      ; R1 = 2
-PRINT R1
-HALT`,
+                    code: `; Misión 4: División en cadena\nLOAD R1, 120\nLOAD R2, 6\nLOAD R3, 10\nDIV R1, R2\nDIV R1, R3\nPRINT R1\nHALT`,
                     validate: () => state.registers.R1 === 2
                 },
                 {
                     id: 'div-5',
                     title: 'División y Módulo',
-                    description: 'Calcula cociente y residuo',
-                    objective: 'R1 = 17 ÷ 5 = 3, R2 = 17 mod 5 = 2',
-                    code: `; Misión 5: División y módulo
-LOAD R1, 17
-LOAD R2, 5
-LOAD R3, 17
-DIV R1, R2      ; R1 = 3
-MOD R3, R2      ; R3 = 2
-PRINT R1
-PRINT R3
-HALT`,
+                    description: 'Calcula cociente y residuo de 17 ÷ 5',
+                    objective: 'R1 = 3 (cociente), R3 = 2 (residuo)',
+                    code: `; Misión 5: División y módulo\nLOAD R1, 17\nLOAD R2, 5\nLOAD R3, 17\nDIV R1, R2\nMOD R3, R2\nPRINT R1\nPRINT R3\nHALT`,
                     validate: () => state.registers.R1 === 3 && state.registers.R3 === 2
                 }
             ]
@@ -1161,134 +868,79 @@ HALT`,
 
         const completedMissions = new Set();
 
-        // ==================== SISTEMA DE TUTORIAL ====================
+        // ==================== TUTORIAL ====================
         const tutorialSteps = [
             {
                 title: 'Bienvenido al Tutorial de Suma y Resta',
-                content: `
-                    <p>En este tutorial aprenderás los conceptos básicos de suma y resta usando el simulador de ensamblaje.</p>
+                content: `<p>En este tutorial aprenderás los conceptos básicos de suma y resta usando el simulador de ensamblaje.</p>
                     <p>El ensamblaje es un lenguaje de bajo nivel que controla directamente el procesador mediante instrucciones simples.</p>
                     <p><strong>Conceptos clave:</strong></p>
                     <ul style="margin-left: 20px; margin-top: 10px;">
-                        <li>Registros: Variables rápidas (R0-R7)</li>
-                        <li>Instrucciones: Comandos que ejecutan operaciones</li>
-                        <li>Memoria: Almacenamiento permanente de datos</li>
-                    </ul>
-                `
+                        <li><strong>Registros:</strong> Variables rápidas (R0-R7)</li>
+                        <li><strong>Instrucciones:</strong> Comandos que ejecutan operaciones</li>
+                        <li><strong>Memoria:</strong> Almacenamiento permanente de datos</li>
+                    </ul>`
             },
             {
                 title: 'Paso 1: Cargar Números',
-                content: `
-                    <p>Antes de operar, necesitas cargar números en los registros usando <code>LOAD</code>.</p>
-                    <div class="tutorial-code">
-                        LOAD R1, 10  ; Carga el valor 10 en el registro R1<br>
-                        LOAD R2, 5   ; Carga el valor 5 en el registro R2
-                    </div>
+                content: `<p>Antes de operar, necesitas cargar números en los registros usando <code>LOAD</code>.</p>
+                    <div class="tutorial-code">LOAD R1, 10  ; Carga el valor 10 en R1<br>LOAD R2, 5   ; Carga el valor 5 en R2</div>
                     <p><strong>Sintaxis:</strong> <code>LOAD registro, valor</code></p>
-                    <p>Los registros son como variables temporales muy rápidas. Tienes 8 registros disponibles: R0 hasta R7.</p>
-                `
+                    <p>Los registros son como variables temporales muy rápidas. Tienes 8 disponibles: R0 hasta R7.</p>`
             },
             {
                 title: 'Paso 2: Suma Básica',
-                content: `
-                    <p>Para sumar dos registros, usa la instrucción <code>ADD</code>.</p>
-                    <div class="tutorial-code">
-                        LOAD R1, 10  ; R1 = 10<br>
-                        LOAD R2, 5   ; R2 = 5<br>
-                        ADD R1, R2   ; R1 = R1 + R2 = 15<br>
-                        PRINT R1     ; Muestra 15 en consola
-                    </div>
-                    <p><strong>Sintaxis:</strong> <code>ADD registro_destino, registro_origen</code></p>
-                    <p>El resultado se guarda en el primer registro (R1 en este caso).</p>
-                `
+                content: `<p>Para sumar dos registros, usa la instrucción <code>ADD</code>.</p>
+                    <div class="tutorial-code">LOAD R1, 10  ; R1 = 10<br>LOAD R2, 5   ; R2 = 5<br>ADD R1, R2   ; R1 = R1 + R2 = 15<br>PRINT R1     ; Muestra 15</div>
+                    <p><strong>Sintaxis:</strong> <code>ADD destino, origen</code></p>
+                    <p>El resultado se guarda en el primer registro (destino).</p>`
             },
             {
                 title: 'Paso 3: Resta Básica',
-                content: `
-                    <p>Para restar, usa la instrucción <code>SUB</code>.</p>
-                    <div class="tutorial-code">
-                        LOAD R1, 20  ; R1 = 20<br>
-                        LOAD R2, 8   ; R2 = 8<br>
-                        SUB R1, R2   ; R1 = R1 - R2 = 12<br>
-                        PRINT R1     ; Muestra 12 en consola
-                    </div>
-                    <p><strong>Sintaxis:</strong> <code>SUB registro_destino, registro_origen</code></p>
-                    <p>El resultado se guarda en el primer registro (R1 en este caso).</p>
-                `
+                content: `<p>Para restar, usa la instrucción <code>SUB</code>.</p>
+                    <div class="tutorial-code">LOAD R1, 20  ; R1 = 20<br>LOAD R2, 8   ; R2 = 8<br>SUB R1, R2   ; R1 = R1 - R2 = 12<br>PRINT R1     ; Muestra 12</div>
+                    <p><strong>Sintaxis:</strong> <code>SUB destino, origen</code></p>
+                    <p>El resultado se guarda en el primer registro (destino).</p>`
             },
             {
                 title: 'Paso 4: Incremento y Decremento',
-                content: `
-                    <p>Para sumar o restar 1, puedes usar <code>INC</code> y <code>DEC</code>.</p>
-                    <div class="tutorial-code">
-                        LOAD R1, 5   ; R1 = 5<br>
-                        INC R1       ; R1 = 6<br>
-                        INC R1       ; R1 = 7<br>
-                        DEC R1       ; R1 = 6<br>
-                        PRINT R1     ; Muestra 6
-                    </div>
+                content: `<p>Para sumar o restar 1, puedes usar <code>INC</code> y <code>DEC</code>.</p>
+                    <div class="tutorial-code">LOAD R1, 5   ; R1 = 5<br>INC R1       ; R1 = 6<br>INC R1       ; R1 = 7<br>DEC R1       ; R1 = 6<br>PRINT R1     ; Muestra 6</div>
                     <p><strong>Sintaxis:</strong> <code>INC registro</code> o <code>DEC registro</code></p>
-                    <p>Son más eficientes que usar ADD o SUB con 1.</p>
-                `
+                    <p>Son más eficientes que usar ADD o SUB con 1.</p>`
             },
             {
                 title: 'Paso 5: Operaciones Múltiples',
-                content: `
-                    <p>Puedes encadenar múltiples operaciones:</p>
-                    <div class="tutorial-code">
-                        LOAD R1, 10  ; R1 = 10<br>
-                        LOAD R2, 5   ; R2 = 5<br>
-                        LOAD R3, 3   ; R3 = 3<br>
-                        <br>
-                        ADD R1, R2   ; R1 = 10 + 5 = 15<br>
-                        SUB R1, R3   ; R1 = 15 - 3 = 12<br>
-                        PRINT R1     ; Muestra 12
-                    </div>
-                    <p>Cada instrucción modifica el registro destino, permitiéndote construir cálculos complejos paso a paso.</p>
-                `
+                content: `<p>Puedes encadenar múltiples operaciones:</p>
+                    <div class="tutorial-code">LOAD R1, 10  ; R1 = 10<br>LOAD R2, 5   ; R2 = 5<br>LOAD R3, 3   ; R3 = 3<br><br>ADD R1, R2   ; R1 = 10 + 5 = 15<br>SUB R1, R3   ; R1 = 15 - 3 = 12<br>PRINT R1     ; Muestra 12</div>
+                    <p>Cada instrucción modifica el registro destino, permitiéndote construir cálculos complejos paso a paso.</p>`
             },
             {
                 title: 'Paso 6: Usando Memoria',
-                content: `
-                    <p>Puedes guardar resultados en memoria para usarlos después:</p>
-                    <div class="tutorial-code">
-                        LOAD R1, 25  ; R1 = 25<br>
-                        LOAD R2, 17  ; R2 = 17<br>
-                        ADD R1, R2   ; R1 = 42<br>
-                        STORE R1, 0  ; Guarda R1 en memoria[0]<br>
-                        <br>
-                        LOAD R3, 10  ; R3 = 10<br>
-                        LOADM R4, 0  ; R4 = memoria[0] = 42<br>
-                        SUB R4, R3   ; R4 = 42 - 10 = 32<br>
-                        PRINT R4     ; Muestra 32
-                    </div>
-                    <p><strong>STORE:</strong> Guarda registro en memoria<br>
-                    <strong>LOADM:</strong> Carga desde memoria a registro</p>
-                `
+                content: `<p>Puedes guardar resultados en memoria para usarlos después:</p>
+                    <div class="tutorial-code">LOAD R1, 25  ; R1 = 25<br>LOAD R2, 17  ; R2 = 17<br>ADD R1, R2   ; R1 = 42<br>STORE R1, 0  ; Guarda R1 en mem[0]<br><br>LOAD R3, 10  ; R3 = 10<br>LOADM R4, 0  ; R4 = mem[0] = 42<br>SUB R4, R3   ; R4 = 42 - 10 = 32<br>PRINT R4     ; Muestra 32</div>
+                    <p><strong>STORE:</strong> Guarda registro en memoria<br><strong>LOADM:</strong> Carga desde memoria a registro</p>`
             },
             {
                 title: '¡Felicidades!',
-                content: `
-                    <p>Has completado el tutorial básico de suma y resta.</p>
+                content: `<p>Has completado el tutorial básico de suma y resta.</p>
                     <p><strong>Resumen de lo aprendido:</strong></p>
                     <ul style="margin-left: 20px; margin-top: 10px;">
-                        <li>Cargar números con LOAD</li>
-                        <li>Sumar con ADD</li>
-                        <li>Restar con SUB</li>
-                        <li>Incrementar/decrementar con INC/DEC</li>
+                        <li>Cargar números con <code>LOAD</code></li>
+                        <li>Sumar con <code>ADD</code></li>
+                        <li>Restar con <code>SUB</code></li>
+                        <li>Incrementar/decrementar con <code>INC</code>/<code>DEC</code></li>
                         <li>Encadenar operaciones</li>
-                        <li>Usar memoria con STORE/LOADM</li>
+                        <li>Usar memoria con <code>STORE</code>/<code>LOADM</code></li>
                     </ul>
                     <p style="margin-top: 15px;"><strong>Próximos pasos:</strong></p>
-                    <p>¡Ahora intenta completar las misiones de suma y resta para practicar lo aprendido!</p>
-                    <p>Después puedes explorar las misiones de multiplicación y división.</p>
-                `
+                    <p>¡Ahora intenta completar las misiones de suma y resta para practicar lo aprendido!</p>`
             }
         ];
 
         let currentTutorialStep = 0;
 
-        // ==================== INICIALIZACIÓN ====================
+        // ==================== INICIALIZACIÓN UI ====================
         function initMemoryGrid() {
             const grid = document.getElementById('memoryGrid');
             grid.innerHTML = '';
@@ -1312,14 +964,13 @@ HALT`,
         function updateLineNumbers() {
             const editor = document.getElementById('codeEditor');
             const lines = editor.value.split('\n').length;
-            const lineNums = document.getElementById('lineNumbers');
-            lineNums.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+            document.getElementById('lineNumbers').innerHTML =
+                Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
         }
 
         function syncScroll() {
-            const editor = document.getElementById('codeEditor');
-            const lineNums = document.getElementById('lineNumbers');
-            lineNums.scrollTop = editor.scrollTop;
+            document.getElementById('lineNumbers').scrollTop =
+                document.getElementById('codeEditor').scrollTop;
         }
 
         function handleTab(e) {
@@ -1341,19 +992,14 @@ HALT`,
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
-
                 if (!line || line.startsWith(';')) continue;
 
                 const commentIdx = line.indexOf(';');
-                if (commentIdx !== -1) {
-                    line = line.substring(0, commentIdx).trim();
-                }
-
+                if (commentIdx !== -1) line = line.substring(0, commentIdx).trim();
                 if (!line) continue;
 
                 if (line.endsWith(':')) {
-                    const labelName = line.slice(0, -1).trim().toUpperCase();
-                    labels[labelName] = instructions.length;
+                    labels[line.slice(0, -1).trim().toUpperCase()] = instructions.length;
                     continue;
                 }
 
@@ -1367,24 +1013,13 @@ HALT`,
                     });
                 }
             }
-
             return { instructions, labels };
         }
 
         // ==================== EJECUCIÓN ====================
-        function getRegisterValue(operand) {
-            const reg = operand.toUpperCase();
-            if (state.registers.hasOwnProperty(reg)) {
-                return state.registers[reg];
-            }
-            throw new Error(`Registro inválido: ${operand}`);
-        }
-
         function setRegister(reg, value) {
             reg = reg.toUpperCase();
-            if (!state.registers.hasOwnProperty(reg)) {
-                throw new Error(`Registro inválido: ${reg}`);
-            }
+            if (!state.registers.hasOwnProperty(reg)) throw new Error(`Registro inválido: ${reg}`);
             state.registers[reg] = value;
             updateFlags(value);
             updateRegisterDisplay(reg);
@@ -1392,9 +1027,7 @@ HALT`,
 
         function parseOperand(operand) {
             const upper = operand.toUpperCase();
-            if (state.registers.hasOwnProperty(upper)) {
-                return state.registers[upper];
-            }
+            if (state.registers.hasOwnProperty(upper)) return state.registers[upper];
             const num = parseInt(operand);
             if (!isNaN(num)) return num;
             throw new Error(`Operando inválido: ${operand}`);
@@ -1421,7 +1054,6 @@ HALT`,
                     logConsole(`LOAD ${reg} ← ${val}`, 'step');
                     break;
                 }
-
                 case 'ADD': {
                     if (operands.length < 2) throw new Error('ADD requiere: Rn, Rm');
                     const reg = operands[0].toUpperCase();
@@ -1431,7 +1063,6 @@ HALT`,
                     logConsole(`ADD ${reg} = ${old} + ${val} = ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'SUB': {
                     if (operands.length < 2) throw new Error('SUB requiere: Rn, Rm');
                     const reg = operands[0].toUpperCase();
@@ -1441,7 +1072,6 @@ HALT`,
                     logConsole(`SUB ${reg} = ${old} - ${val} = ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'MUL': {
                     if (operands.length < 2) throw new Error('MUL requiere: Rn, Rm');
                     const reg = operands[0].toUpperCase();
@@ -1451,7 +1081,6 @@ HALT`,
                     logConsole(`MUL ${reg} = ${old} × ${val} = ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'DIV': {
                     if (operands.length < 2) throw new Error('DIV requiere: Rn, Rm');
                     const reg = operands[0].toUpperCase();
@@ -1462,7 +1091,6 @@ HALT`,
                     logConsole(`DIV ${reg} = ${old} ÷ ${val} = ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'MOD': {
                     if (operands.length < 2) throw new Error('MOD requiere: Rn, Rm');
                     const reg = operands[0].toUpperCase();
@@ -1473,7 +1101,6 @@ HALT`,
                     logConsole(`MOD ${reg} = ${old} mod ${val} = ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'INC': {
                     if (operands.length < 1) throw new Error('INC requiere: Rn');
                     const reg = operands[0].toUpperCase();
@@ -1483,7 +1110,6 @@ HALT`,
                     logConsole(`INC ${reg} = ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'DEC': {
                     if (operands.length < 1) throw new Error('DEC requiere: Rn');
                     const reg = operands[0].toUpperCase();
@@ -1493,7 +1119,6 @@ HALT`,
                     logConsole(`DEC ${reg} = ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'CMP': {
                     if (operands.length < 2) throw new Error('CMP requiere: Rn, Rm');
                     const val1 = parseOperand(operands[0]);
@@ -1505,14 +1130,12 @@ HALT`,
                     logConsole(`CMP ${val1} vs ${val2} → Z=${state.flags.Z}, N=${state.flags.N}`, 'step');
                     break;
                 }
-
                 case 'PRINT': {
                     if (operands.length < 1) throw new Error('PRINT requiere: Rn');
                     const val = parseOperand(operands[0]);
                     logConsole(`[OUTPUT] ${val}`, 'output');
                     break;
                 }
-
                 case 'STORE': {
                     if (operands.length < 2) throw new Error('STORE requiere: Rn, dirección');
                     const reg = operands[0].toUpperCase();
@@ -1523,7 +1146,6 @@ HALT`,
                     logConsole(`STORE mem[${addr}] ← ${state.registers[reg]}`, 'step');
                     break;
                 }
-
                 case 'LOADM': {
                     if (operands.length < 2) throw new Error('LOADM requiere: Rn, dirección');
                     const reg = operands[0].toUpperCase();
@@ -1533,51 +1155,46 @@ HALT`,
                     logConsole(`LOADM ${reg} ← mem[${addr}] = ${state.memory[addr]}`, 'step');
                     break;
                 }
-
                 case 'JMP': {
                     const label = operands[0].toUpperCase();
                     if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
                     state.programCounter = state.labels[label];
-                    logConsole(`JMP → ${label} (línea ${state.labels[label] + 1})`, 'step');
+                    logConsole(`JMP → ${label}`, 'step');
                     return;
                 }
-
                 case 'JZ': {
                     const label = operands[0].toUpperCase();
                     if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
                     if (state.flags.Z === 1) {
                         state.programCounter = state.labels[label];
-                        logConsole(`JZ → ${label} (SALTADO, Z=1)`, 'step');
+                        logConsole(`JZ → ${label} (SALTADO)`, 'step');
                         return;
                     }
-                    logConsole(`JZ → ${label} (no saltado, Z=0)`, 'step');
+                    logConsole(`JZ → ${label} (no saltado)`, 'step');
                     break;
                 }
-
                 case 'JNZ': {
                     const label = operands[0].toUpperCase();
                     if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
                     if (state.flags.Z === 0) {
                         state.programCounter = state.labels[label];
-                        logConsole(`JNZ → ${label} (SALTADO, Z=0)`, 'step');
+                        logConsole(`JNZ → ${label} (SALTADO)`, 'step');
                         return;
                     }
-                    logConsole(`JNZ → ${label} (no saltado, Z=1)`, 'step');
+                    logConsole(`JNZ → ${label} (no saltado)`, 'step');
                     break;
                 }
-
                 case 'JL': {
                     const label = operands[0].toUpperCase();
                     if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
                     if (state.flags.N === 1) {
                         state.programCounter = state.labels[label];
-                        logConsole(`JL → ${label} (SALTADO, N=1)`, 'step');
+                        logConsole(`JL → ${label} (SALTADO)`, 'step');
                         return;
                     }
                     logConsole(`JL → ${label} (no saltado)`, 'step');
                     break;
                 }
-
                 case 'JG': {
                     const label = operands[0].toUpperCase();
                     if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
@@ -1589,14 +1206,12 @@ HALT`,
                     logConsole(`JG → ${label} (no saltado)`, 'step');
                     break;
                 }
-
                 case 'HALT': {
                     state.halted = true;
                     state.running = false;
                     logConsole('HALT — Ejecución detenida.', 'warn');
                     break;
                 }
-
                 case 'MOV': {
                     if (operands.length < 2) throw new Error('MOV requiere: Rn, Rm');
                     const dest = operands[0].toUpperCase();
@@ -1605,7 +1220,6 @@ HALT`,
                     logConsole(`MOV ${dest} ← ${val}`, 'step');
                     break;
                 }
-
                 case 'CLEAR':
                 case 'CLR': {
                     if (operands.length < 1) throw new Error('CLR requiere: Rn');
@@ -1614,7 +1228,6 @@ HALT`,
                     logConsole(`CLR ${reg} = 0`, 'step');
                     break;
                 }
-
                 default:
                     throw new Error(`Instrucción desconocida: ${opcode}`);
             }
@@ -1644,6 +1257,10 @@ HALT`,
                 state.programCounter = 0;
 
                 logConsole('━━━ Ejecución iniciada ━━━', 'info');
+                if (state.currentMission) {
+                    logConsole(`🎯 Misión activa: ${state.currentMission.title}`, 'mission');
+                    logConsole(`Objetivo: ${state.currentMission.objective}`, 'mission');
+                }
                 executeAll();
             } catch (e) {
                 logConsole(`Error de parsing: ${e.message}`, 'error');
@@ -1656,14 +1273,22 @@ HALT`,
             let maxSteps = 10000;
 
             function step() {
-                if (!state.running || state.halted || state.programCounter >= state.instructions.length) {
-                    if (state.programCounter >= state.instructions.length && !state.halted) {
+                // CORRECCIÓN: Detectar fin de ejecución (por HALT o fin de instrucciones)
+                const finished = state.halted ||
+                                 state.programCounter >= state.instructions.length ||
+                                 !state.running;
+
+                if (finished) {
+                    if (!state.halted && state.programCounter >= state.instructions.length) {
                         logConsole('━━━ Programa finalizado ━━━', 'info');
-                        if (state.currentMission) {
-                            checkMissionCompletion();
-                        }
                     }
                     state.running = false;
+
+                    // CORRECCIÓN CRÍTICA: Validar misión al terminar
+                    // (antes solo se validaba si NO había HALT, lo cual era un bug)
+                    if (state.currentMission) {
+                        checkMissionCompletion();
+                    }
                     return;
                 }
 
@@ -1680,6 +1305,10 @@ HALT`,
                 } catch (e) {
                     logConsole(`Error en línea ${state.instructions[state.programCounter].lineNum}: ${e.message}`, 'error');
                     state.running = false;
+                    // También validar en caso de error (fallará, pero es consistente)
+                    if (state.currentMission) {
+                        checkMissionCompletion();
+                    }
                     return;
                 }
 
@@ -1730,9 +1359,14 @@ HALT`,
 
         function resetSimulator() {
             if (state.stepTimeout) clearTimeout(state.stepTimeout);
+            const currentMission = state.currentMission; // Preservar misión activa
             resetState();
+            state.currentMission = currentMission;
             clearConsole();
             logConsole('[Sistema] Simulador reiniciado.', 'info');
+            if (currentMission) {
+                logConsole(`🎯 Misión activa: ${currentMission.title}`, 'mission');
+            }
         }
 
         function resetState() {
@@ -1749,7 +1383,7 @@ HALT`,
             updateAllDisplays();
         }
 
-        // ==================== ACTUALIZACIÓN DE DISPLAY ====================
+        // ==================== DISPLAY ====================
         function updateRegisterDisplay(reg) {
             const el = document.getElementById(`reg-${reg}`);
             if (el) {
@@ -1769,14 +1403,11 @@ HALT`,
         }
 
         function updateFlagsDisplay() {
-            document.getElementById('flag-Z').textContent = state.flags.Z;
-            document.getElementById('flag-Z').className = `flag-val ${state.flags.Z ? 'on' : ''}`;
-            document.getElementById('flag-N').textContent = state.flags.N;
-            document.getElementById('flag-N').className = `flag-val ${state.flags.N ? 'on' : ''}`;
-            document.getElementById('flag-C').textContent = state.flags.C;
-            document.getElementById('flag-C').className = `flag-val ${state.flags.C ? 'on' : ''}`;
-            document.getElementById('flag-O').textContent = state.flags.O;
-            document.getElementById('flag-O').className = `flag-val ${state.flags.O ? 'on' : ''}`;
+            ['Z', 'N', 'C', 'O'].forEach(f => {
+                const el = document.getElementById(`flag-${f}`);
+                el.textContent = state.flags[f];
+                el.className = `flag-val ${state.flags[f] ? 'on' : ''}`;
+            });
         }
 
         function updateAllDisplays() {
@@ -1805,7 +1436,7 @@ HALT`,
             document.getElementById('consoleOutput').innerHTML = '';
         }
 
-        // ==================== SISTEMA DE MISIONES ====================
+        // ==================== MISIONES ====================
         function openMissions() {
             document.getElementById('missionsModal').classList.add('active');
             renderMissions();
@@ -1815,11 +1446,10 @@ HALT`,
             document.getElementById('missionsModal').classList.remove('active');
         }
 
-        function switchMissionTab(category) {
-            document.querySelectorAll('.mission-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.mission-category').forEach(cat => cat.classList.remove('active'));
-            
-            event.target.classList.add('active');
+        function switchMissionTab(el, category) {
+            document.querySelectorAll('.mission-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.mission-category').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
             document.getElementById(`mission-${category}`).classList.add('active');
         }
 
@@ -1827,21 +1457,22 @@ HALT`,
             const totalMissions = Object.values(missions).flat().length;
             const completedCount = completedMissions.size;
             const progress = (completedCount / totalMissions) * 100;
-            
-            document.getElementById('progressBar').style.width = `${progress}%`;
-            document.getElementById('progressBar').textContent = `${completedCount}/${totalMissions}`;
+
+            const bar = document.getElementById('progressBar');
+            bar.style.width = `${Math.max(progress, 8)}%`;
+            bar.textContent = `${completedCount}/${totalMissions}`;
 
             for (const category in missions) {
                 const list = document.getElementById(`missionList-${category}`);
                 list.innerHTML = '';
-                
+
                 missions[category].forEach((mission, index) => {
                     const isCompleted = completedMissions.has(mission.id);
                     const isLocked = index > 0 && !completedMissions.has(missions[category][index - 1].id);
-                    
+
                     const item = document.createElement('div');
                     item.className = `mission-item ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`;
-                    
+
                     item.innerHTML = `
                         <div class="mission-header">
                             <div class="mission-title">
@@ -1857,11 +1488,11 @@ HALT`,
                             <div class="mission-objective-text">${mission.objective}</div>
                         </div>
                     `;
-                    
+
                     if (!isLocked) {
                         item.onclick = () => loadMission(mission);
                     }
-                    
+
                     list.appendChild(item);
                 });
             }
@@ -1872,27 +1503,97 @@ HALT`,
             document.getElementById('codeEditor').value = mission.code;
             updateLineNumbers();
             closeMissions();
-            logConsole(`🎯 Misión cargada: ${mission.title}`, 'info');
-            logConsole(`Objetivo: ${mission.objective}`, 'warn');
+
+            // Mostrar banner de misión activa
+            const banner = document.getElementById('missionBanner');
+            document.getElementById('bannerTitle').textContent = `🎯 Misión: ${mission.title}`;
+            document.getElementById('bannerObj').textContent = mission.objective;
+            banner.classList.add('active');
+
+            logConsole(`━━━━━━━━━━━━━━━━━━━━━━━━`, 'mission');
+            logConsole(`🎯 Misión cargada: ${mission.title}`, 'mission');
+            logConsole(`Objetivo: ${mission.objective}`, 'mission');
+            logConsole(`━━━━━━━━━━━━━━━━━━━━━━━━`, 'mission');
         }
 
+        function clearCurrentMission() {
+            state.currentMission = null;
+            document.getElementById('missionBanner').classList.remove('active');
+            logConsole('[Sistema] Misión desactivada.', 'info');
+        }
+
+        // CORRECCIÓN: Función de validación mejorada
         function checkMissionCompletion() {
             if (!state.currentMission) return;
-            
-            if (state.currentMission.validate()) {
-                completedMissions.add(state.currentMission.id);
-                logConsole('━━━━━━━━━━━━━━━━━━━━━━━━', 'success');
-                logConsole('✅ ¡MISIÓN COMPLETADA!', 'success');
-                logConsole(`Has completado: ${state.currentMission.title}`, 'success');
-                logConsole('━━━━━━━━━━━━━━━━━━━━━━━━', 'success');
+
+            const mission = state.currentMission;
+            let passed = false;
+            let details = '';
+
+            try {
+                passed = mission.validate();
+            } catch (e) {
+                passed = false;
+                details = ` (Error: ${e.message})`;
+            }
+
+            if (passed) {
+                completedMissions.add(mission.id);
+                logConsole('', 'info');
+                logConsole('╔══════════════════════════════════╗', 'success');
+                logConsole('║   ✅ ¡MISIÓN COMPLETADA! ✅      ║', 'success');
+                logConsole(`║   ${mission.title.padEnd(30)} ║`, 'success');
+                logConsole('╚══════════════════════════════════╝', 'success');
+                logConsole('', 'info');
+
+                // Desactivar misión actual
                 state.currentMission = null;
+                document.getElementById('missionBanner').classList.remove('active');
             } else {
-                logConsole('❌ Misión no completada. Revisa el objetivo.', 'error');
-                logConsole(`Objetivo: ${state.currentMission.objective}`, 'warn');
+                logConsole('', 'info');
+                logConsole('❌ Misión no completada.', 'error');
+                logConsole(`Objetivo: ${mission.objective}`, 'warn');
+
+                // Dar pistas sobre el estado actual
+                const hint = getMissionHint(mission);
+                if (hint) {
+                    logConsole(`Estado actual: ${hint}`, 'warn');
+                }
+
+                logConsole('💡 Modifica el código y vuelve a ejecutar.', 'info');
+                logConsole('', 'info');
             }
         }
 
-        // ==================== SISTEMA DE TUTORIAL ====================
+        // Función auxiliar para dar pistas sobre el estado actual
+        function getMissionHint(mission) {
+            const id = mission.id;
+            const regs = state.registers;
+            const mem = state.memory;
+
+            // Pistas específicas según la misión
+            if (id.startsWith('suma-') || id.startsWith('resta-') ||
+                id.startsWith('mult-') || id.startsWith('div-')) {
+
+                const parts = [];
+                // Mostrar registros relevantes
+                for (let i = 0; i <= 7; i++) {
+                    if (regs[`R${i}`] !== 0) {
+                        parts.push(`R${i}=${regs[`R${i}`]}`);
+                    }
+                }
+                // Mostrar memoria relevante
+                for (let i = 0; i < 16; i++) {
+                    if (mem[i] !== 0) {
+                        parts.push(`mem[${i}]=${mem[i]}`);
+                    }
+                }
+                return parts.length > 0 ? parts.join(', ') : 'todos los registros están en 0';
+            }
+            return null;
+        }
+
+        // ==================== TUTORIAL ====================
         function openTutorial() {
             currentTutorialStep = 0;
             renderTutorialStep();
@@ -1906,7 +1607,7 @@ HALT`,
         function renderTutorialStep() {
             const step = tutorialSteps[currentTutorialStep];
             const content = document.getElementById('tutorialContent');
-            
+
             content.innerHTML = `
                 <div class="tutorial-step">
                     <h3>${step.title}</h3>
@@ -1938,7 +1639,7 @@ HALT`,
             }
         }
 
-        // ==================== INICIALIZACIÓN ====================
+        // ==================== INICIO ====================
         window.onload = function () {
             initMemoryGrid();
             initEditor();
