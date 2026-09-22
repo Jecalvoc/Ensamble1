@@ -1,1649 +1,1148 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Ensamblaje Básico - Con Misiones</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Courier New', monospace;
-            background: #0a0a0f;
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            padding: 15px 30px;
-            border-bottom: 2px solid #0f3460;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        header h1 {
-            font-size: 1.4rem;
-            color: #00d4ff;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-        }
-
-        header .subtitle { font-size: 0.8rem; color: #7a7a9a; }
-
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            grid-template-rows: 1fr auto;
-            gap: 0;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .editor-panel {
-            display: flex;
-            flex-direction: column;
-            border-right: 2px solid #1a1a3e;
-        }
-
-        .panel-header {
-            background: #12121f;
-            padding: 10px 15px;
-            font-size: 0.85rem;
-            color: #00d4ff;
-            border-bottom: 1px solid #1a1a3e;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .code-area { flex: 1; display: flex; overflow: hidden; }
-
-        .line-numbers {
-            background: #0d0d18;
-            padding: 15px 10px;
-            text-align: right;
-            color: #3a3a5a;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            min-width: 45px;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        #codeEditor {
-            flex: 1;
-            background: #0a0a14;
-            color: #c8d6e5;
-            border: none;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            resize: none;
-            outline: none;
-            tab-size: 4;
-        }
-
-        #codeEditor::placeholder { color: #2a2a4a; }
-
-        .controls {
-            background: #12121f;
-            padding: 12px 15px;
-            display: flex;
-            gap: 10px;
-            border-top: 1px solid #1a1a3e;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 8px 18px;
-            border: 1px solid #0f3460;
-            background: linear-gradient(180deg, #1a2a4a, #0f1f3a);
-            color: #00d4ff;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            background: linear-gradient(180deg, #2a3a5a, #1a2a4a);
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .btn-run {
-            border-color: #00c853;
-            color: #00c853;
-            background: linear-gradient(180deg, #0a2a1a, #051a0f);
-        }
-
-        .btn-run:hover { box-shadow: 0 0 10px rgba(0, 200, 83, 0.3); }
-
-        .btn-step {
-            border-color: #ffab00;
-            color: #ffab00;
-            background: linear-gradient(180deg, #2a1f0a, #1a150a);
-        }
-
-        .btn-step:hover { box-shadow: 0 0 10px rgba(255, 171, 0, 0.3); }
-
-        .btn-reset {
-            border-color: #ff5252;
-            color: #ff5252;
-            background: linear-gradient(180deg, #2a0a0a, #1a0505);
-        }
-
-        .btn-reset:hover { box-shadow: 0 0 10px rgba(255, 82, 82, 0.3); }
-
-        .btn-mission {
-            border-color: #ffd700;
-            color: #ffd700;
-            background: linear-gradient(180deg, #2a2a0a, #1a1a05);
-        }
-
-        .btn-mission:hover { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
-
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .registers-section, .flags-section, .memory-section, .help-section {
-            padding: 15px;
-            border-bottom: 1px solid #1a1a3e;
-        }
-
-        .registers-section h3, .flags-section h3, .memory-section h3, .help-section h3 {
-            color: #00d4ff;
-            font-size: 0.85rem;
-            margin-bottom: 12px;
-        }
-
-        .register-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .register-item {
-            background: #0d0d18;
-            border: 1px solid #1a1a3e;
-            border-radius: 4px;
-            padding: 8px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s;
-        }
-
-        .register-item.active {
-            border-color: #00d4ff;
-            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
-        }
-
-        .register-item .reg-name { color: #7a7a9a; font-size: 0.75rem; }
-        .register-item .reg-value { color: #00ff88; font-size: 0.9rem; font-weight: bold; }
-
-        .flags-grid { display: flex; gap: 10px; }
-
-        .flag-item {
-            background: #0d0d18;
-            border: 1px solid #1a1a3e;
-            border-radius: 4px;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-        }
-
-        .flag-item .flag-name { color: #7a7a9a; }
-        .flag-item .flag-val { color: #ff5252; font-weight: bold; }
-        .flag-item .flag-val.on { color: #00ff88; }
-
-        .memory-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 5px;
-        }
-
-        .memory-cell {
-            background: #0d0d18;
-            border: 1px solid #1a1a3e;
-            border-radius: 3px;
-            padding: 5px;
-            text-align: center;
-            font-size: 0.7rem;
-        }
-
-        .memory-cell .addr { color: #5a5a7a; font-size: 0.6rem; }
-        .memory-cell .val { color: #ffab00; font-size: 0.8rem; }
-        .memory-cell.active { border-color: #ffab00; }
-
-        .help-item {
-            font-size: 0.7rem;
-            color: #7a7a9a;
-            margin-bottom: 4px;
-            line-height: 1.4;
-        }
-
-        .help-item code {
-            color: #00ff88;
-            background: #0d0d18;
-            padding: 1px 4px;
-            border-radius: 2px;
-        }
-
-        .console-panel {
-            grid-column: 1 / -1;
-            background: #080810;
-            border-top: 2px solid #1a1a3e;
-            max-height: 220px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .console-output {
-            flex: 1;
-            padding: 12px 15px;
-            overflow-y: auto;
-            font-size: 0.85rem;
-            line-height: 1.5;
-        }
-
-        .console-output .log-info { color: #00d4ff; }
-        .console-output .log-success { color: #00ff88; font-weight: bold; }
-        .console-output .log-error { color: #ff5252; }
-        .console-output .log-warn { color: #ffab00; }
-        .console-output .log-output { color: #e0e0e0; }
-        .console-output .log-step { color: #7a7a9a; font-size: 0.75rem; }
-        .console-output .log-mission {
-            color: #ffd700;
-            background: #1a1a0a;
-            padding: 4px 8px;
-            border-left: 3px solid #ffd700;
-            margin: 4px 0;
-        }
-
-        .speed-control {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-        }
-
-        .speed-control label { font-size: 0.75rem; color: #7a7a9a; }
-        .speed-control input[type="range"] { width: 80px; accent-color: #00d4ff; }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active { display: flex; }
-
-        .modal-content {
-            background: #12121f;
-            border: 2px solid #0f3460;
-            border-radius: 8px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            padding: 20px;
-            border-bottom: 2px solid #0f3460;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .modal-header h2 { color: #ffd700; font-size: 1.3rem; }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: #ff5252;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0 10px;
-        }
-
-        .modal-body { padding: 20px; }
-
-        .mission-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #1a1a3e;
-        }
-
-        .mission-tab {
-            padding: 10px 20px;
-            background: #0d0d18;
-            border: 1px solid #1a1a3e;
-            border-bottom: none;
-            border-radius: 4px 4px 0 0;
-            color: #7a7a9a;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .mission-tab.active {
-            background: #1a1a3e;
-            color: #00d4ff;
-            border-color: #00d4ff;
-        }
-
-        .mission-tab:hover { background: #1a1a3e; }
-
-        .mission-category { display: none; }
-        .mission-category.active { display: block; }
-
-        .mission-list { display: grid; gap: 15px; }
-
-        .mission-item {
-            background: #0d0d18;
-            border: 2px solid #1a1a3e;
-            border-radius: 6px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .mission-item:hover:not(.locked) {
-            border-color: #00d4ff;
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
-        }
-
-        .mission-item.completed {
-            border-color: #00c853;
-            background: #0a1a0f;
-        }
-
-        .mission-item.locked {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .mission-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .mission-title { color: #00d4ff; font-size: 1rem; font-weight: bold; }
-
-        .mission-description {
-            color: #7a7a9a;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin-bottom: 10px;
-        }
-
-        .mission-objective {
-            background: #1a1a2e;
-            padding: 10px;
-            border-radius: 4px;
-            border-left: 3px solid #ffd700;
-            margin-top: 10px;
-        }
-
-        .mission-objective-title { color: #ffd700; font-size: 0.8rem; margin-bottom: 5px; }
-        .mission-objective-text { color: #e0e0e0; font-size: 0.85rem; }
-
-        .tutorial-step {
-            background: #0d0d18;
-            border: 2px solid #00d4ff;
-            border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-
-        .tutorial-step h3 { color: #00d4ff; margin-bottom: 15px; }
-        .tutorial-step p { color: #e0e0e0; line-height: 1.6; margin-bottom: 10px; }
-        .tutorial-step ul { color: #e0e0e0; line-height: 1.8; }
-
-        .tutorial-code {
-            background: #1a1a2e;
-            padding: 10px;
-            border-radius: 4px;
-            border-left: 3px solid #00ff88;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-            color: #c8d6e5;
-            line-height: 1.6;
-        }
-
-        .tutorial-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .progress-bar {
-            background: #0d0d18;
-            border: 1px solid #1a1a3e;
-            border-radius: 4px;
-            height: 24px;
-            margin: 10px 0 20px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: linear-gradient(90deg, #00d4ff, #00ff88);
-            height: 100%;
-            transition: width 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #0a0a0f;
-            font-size: 0.75rem;
-            font-weight: bold;
-            min-width: 40px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        .badge-new { background: #ffd700; color: #0a0a0f; }
-        .badge-completed { background: #00c853; color: #0a0a0f; }
-
-        .mission-banner {
-            background: linear-gradient(135deg, #1a1a0a, #0f0f05);
-            border: 2px solid #ffd700;
-            border-radius: 6px;
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .mission-banner.active { display: block; }
-
-        .mission-banner-title {
-            color: #ffd700;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .mission-banner-obj {
-            color: #e0e0e0;
-            font-size: 0.8rem;
-        }
-
-        .mission-banner-close {
-            float: right;
-            background: none;
-            border: none;
-            color: #ff5252;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0a0a14; }
-        ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3a3a5a; }
-
-        @media (max-width: 900px) {
-            .main-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto;
-            }
-            .editor-panel {
-                border-right: none;
-                border-bottom: 2px solid #1a1a3e;
-                min-height: 300px;
-            }
-            .side-panel { max-height: 300px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Simulador Multi-lenguaje con Misiones</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 { text-align: center; color: #89b4fa; margin-bottom: 10px; }
+  .subtitle { text-align: center; color: #a6adc8; margin-bottom: 20px; }
+  
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .tab {
+    background: #45475a;
+    color: #cdd6f4;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.2s;
+  }
+  .tab:hover { background: #585b70; }
+  .tab.active { background: #89b4fa; color: #1e1e2e; font-weight: bold; }
+  
+  .tab-content {
+    display: none;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .tab-content.active { display: block; }
+  
+  /* Tutorial */
+  .tutorial-container {
+    background: #313244;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .tutorial-step {
+    background: #45475a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #89b4fa;
+  }
+  .tutorial-step h3 {
+    color: #f9e2af;
+    margin-top: 0;
+  }
+  .tutorial-step code {
+    background: #1e1e2e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #a6e3a1;
+    font-family: 'Consolas', monospace;
+  }
+  .tutorial-nav {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  .tutorial-nav button {
+    background: #89b4fa;
+    color: #1e1e2e;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .tutorial-nav button:disabled {
+    background: #585b70;
+    cursor: not-allowed;
+  }
+  .tutorial-code {
+    background: #1e1e2e;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-family: 'Consolas', monospace;
+    color: #f5e0dc;
+  }
+  
+  /* Misiones */
+  .missions-container {
+    background: #313244;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .mission-level {
+    margin-bottom: 30px;
+  }
+  .mission-level h2 {
+    color: #fab387;
+    border-bottom: 2px solid #585b70;
+    padding-bottom: 10px;
+  }
+  .mission-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+  }
+  .mission-card {
+    background: #45475a;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+  .mission-card:hover {
+    transform: translateY(-3px);
+    border-color: #89b4fa;
+  }
+  .mission-card.completed {
+    border-color: #a6e3a1;
+    background: #3a4a3a;
+  }
+  .mission-card h4 {
+    color: #f9e2af;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mission-card p {
+    color: #bac2de;
+    font-size: 14px;
+    margin: 8px 0;
+  }
+  .mission-stars {
+    color: #f9e2af;
+    font-size: 18px;
+  }
+  .star { opacity: 0.3; }
+  .star.earned { opacity: 1; }
+  
+  /* Modal de misión */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: #313244;
+    border-radius: 12px;
+    padding: 25px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-content h2 {
+    color: #89b4fa;
+    margin-top: 0;
+  }
+  .modal-content .objective {
+    background: #45475a;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+    border-left: 4px solid #f9e2af;
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px;
+  }
+  .btn-check { background: #a6e3a1; color: #1e1e2e; }
+  .btn-close { background: #f38ba8; color: #1e1e2e; }
+  .btn-hint { background: #f9e2af; color: #1e1e2e; }
+  
+  /* Simulador */
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .panel {
+    background: #313244;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  select, button {
+    background: #45475a;
+    color: #cdd6f4;
+    border: 1px solid #585b70;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button.run { background: #a6e3a1; color: #1e1e2e; font-weight: bold; }
+  button.run:hover { background: #94d88d; }
+  button.clear { background: #f38ba8; color: #1e1e2e; }
+  textarea {
+    width: 100%;
+    height: 380px;
+    background: #1e1e2e;
+    color: #f5e0dc;
+    border: 1px solid #585b70;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 14px;
+    resize: vertical;
+  }
+  .console {
+    background: #11111b;
+    color: #a6e3a1;
+    border: 1px solid #585b70;
+    border-radius: 6px;
+    padding: 12px;
+    height: 380px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+  }
+  .console .err { color: #f38ba8; }
+  .console .info { color: #89b4fa; }
+  .console .success { color: #a6e3a1; font-weight: bold; }
+  label { color: #a6adc8; font-size: 14px; }
+  
+  /* Progreso */
+  .progress-bar {
+    background: #45475a;
+    height: 30px;
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 20px 0;
+    position: relative;
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, #a6e3a1, #89b4fa);
+    height: 100%;
+    transition: width 0.5s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1e1e2e;
+    font-weight: bold;
+  }
+</style>
 </head>
 <body>
-    <header>
-        <div>
-            <h1>⚡ ASM Simulator v2.1</h1>
-            <div class="subtitle">Simulador de Ensamblaje con Misiones y Tutorial</div>
-        </div>
-    </header>
 
-    <div class="main-container">
-        <div class="editor-panel">
-            <div class="panel-header">
-                <span>📝 Editor de Código</span>
-                <span id="lineInfo">Línea: 1</span>
-            </div>
-            <div class="mission-banner" id="missionBanner">
-                <button class="mission-banner-close" onclick="clearCurrentMission()">×</button>
-                <div class="mission-banner-title" id="bannerTitle">🎯 Misión activa</div>
-                <div class="mission-banner-obj" id="bannerObj"></div>
-            </div>
-            <div class="code-area">
-                <div class="line-numbers" id="lineNumbers">1</div>
-                <textarea id="codeEditor" placeholder="; Escribe tu código ensamblador aquí
-; ¡Explora las misiones para aprender!
-; Haz clic en '🎯 Misiones' para comenzar
+<h1>🧪 Simulador de Programación con Misiones</h1>
+<p class="subtitle">Aprende Java • C++ • Python paso a paso</p>
 
-LOAD R1, 10
-LOAD R2, 5
-ADD R1, R2
-PRINT R1"></textarea>
-            </div>
-            <div class="controls">
-                <button class="btn btn-run" onclick="runProgram()">▶ Ejecutar</button>
-                <button class="btn btn-step" onclick="stepProgram()">⏭ Paso</button>
-                <button class="btn btn-reset" onclick="resetSimulator()">⟲ Reset</button>
-                <button class="btn btn-mission" onclick="openMissions()">🎯 Misiones</button>
-                <button class="btn btn-mission" onclick="openTutorial()">📚 Tutorial</button>
-                <div class="speed-control">
-                    <label>Velocidad:</label>
-                    <input type="range" id="speedRange" min="50" max="1000" value="300">
-                </div>
-            </div>
-        </div>
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('tutorial')">📖 Tutorial</button>
+  <button class="tab" onclick="switchTab('missions')">🎯 Misiones</button>
+  <button class="tab" onclick="switchTab('simulator')">💻 Simulador</button>
+</div>
 
-        <div class="side-panel">
-            <div class="registers-section">
-                <h3>📊 Registros</h3>
-                <div class="register-grid" id="registerGrid">
-                    <div class="register-item" id="reg-R0"><span class="reg-name">R0</span><span class="reg-value">0</span></div>
-                    <div class="register-item" id="reg-R1"><span class="reg-name">R1</span><span class="reg-value">0</span></div>
-                    <div class="register-item" id="reg-R2"><span class="reg-name">R2</span><span class="reg-value">0</span></div>
-                    <div class="register-item" id="reg-R3"><span class="reg-name">R3</span><span class="reg-value">0</span></div>
-                    <div class="register-item" id="reg-R4"><span class="reg-name">R4</span><span class="reg-value">0</span></div>
-                    <div class="register-item" id="reg-R5"><span class="reg-name">R5</span><span class="reg-value">0</span></div>
-                    <div class="register-item" id="reg-R6"><span class="reg-name">R6</span><span class="reg-value">0</span></div>
-                    <div class="register-item" id="reg-R7"><span class="reg-name">R7</span><span class="reg-value">0</span></div>
-                </div>
-            </div>
+<!-- Tutorial -->
+<div class="tab-content active" id="tutorial-tab">
+  <div class="tutorial-container">
+    <h2 style="color:#89b4fa;">📖 Tutorial Básico: Suma y Resta</h2>
+    <div id="tutorial-content"></div>
+    <div class="tutorial-nav">
+      <button id="prev-btn" onclick="prevStep()">← Anterior</button>
+      <button id="next-btn" onclick="nextStep()">Siguiente →</button>
+    </div>
+  </div>
+</div>
 
-            <div class="flags-section">
-                <h3>🚩 Banderas (Flags)</h3>
-                <div class="flags-grid">
-                    <div class="flag-item"><span class="flag-name">ZERO: </span><span class="flag-val" id="flag-Z">0</span></div>
-                    <div class="flag-item"><span class="flag-name">NEG: </span><span class="flag-val" id="flag-N">0</span></div>
-                    <div class="flag-item"><span class="flag-name">CARRY: </span><span class="flag-val" id="flag-C">0</span></div>
-                    <div class="flag-item"><span class="flag-name">OVER: </span><span class="flag-val" id="flag-O">0</span></div>
-                </div>
-            </div>
+<!-- Misiones -->
+<div class="tab-content" id="missions-tab">
+  <div class="missions-container">
+    <h2 style="color:#89b4fa;">🎯 Misiones de Programación</h2>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%">0%</div>
+    </div>
+    <div id="missions-content"></div>
+  </div>
+</div>
 
-            <div class="memory-section">
-                <h3>💾 Memoria (16 celdas)</h3>
-                <div class="memory-grid" id="memoryGrid"></div>
-            </div>
-
-            <div class="help-section">
-                <h3>📖 Referencia Rápida</h3>
-                <div class="help-item"><code>LOAD R1, 42</code> → Carga 42 en R1</div>
-                <div class="help-item"><code>ADD R1, R2</code> → R1 = R1 + R2</div>
-                <div class="help-item"><code>SUB R1, R2</code> → R1 = R1 - R2</div>
-                <div class="help-item"><code>MUL R1, R2</code> → R1 = R1 × R2</div>
-                <div class="help-item"><code>DIV R1, R2</code> → R1 = R1 ÷ R2</div>
-                <div class="help-item"><code>MOD R1, R2</code> → R1 = R1 mod R2</div>
-                <div class="help-item"><code>INC R1</code> → R1 = R1 + 1</div>
-                <div class="help-item"><code>DEC R1</code> → R1 = R1 - 1</div>
-                <div class="help-item"><code>CMP R1, R2</code> → Compara R1 con R2</div>
-                <div class="help-item"><code>PRINT R1</code> → Muestra valor de R1</div>
-                <div class="help-item"><code>STORE R1, 5</code> → Guarda R1 en mem[5]</div>
-                <div class="help-item"><code>LOADM R1, 5</code> → Carga mem[5] en R1</div>
-                <div class="help-item"><code>JMP etiq</code> → Salta a etiqueta</div>
-                <div class="help-item"><code>JZ etiq</code> → Salta si ZERO=1</div>
-                <div class="help-item"><code>HALT</code> → Detiene ejecución</div>
-            </div>
-        </div>
-
-        <div class="console-panel">
-            <div class="panel-header">
-                <span>🖥 Consola de Salida</span>
-                <button class="btn" onclick="clearConsole()" style="padding:4px 10px; font-size:0.7rem;">Limpiar</button>
-            </div>
-            <div class="console-output" id="consoleOutput">
-                <div class="log-info">[Sistema] Simulador iniciado. ¡Explora las misiones para aprender!</div>
-            </div>
-        </div>
+<!-- Simulador -->
+<div class="tab-content" id="simulator-tab">
+  <div class="container">
+    <div class="panel">
+      <div class="controls">
+        <label>Lenguaje:</label>
+        <select id="lang">
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+        </select>
+        <button class="run" onclick="runCode()">▶ Ejecutar</button>
+        <button class="clear" onclick="clearAll()">🗑 Limpiar</button>
+      </div>
+      <textarea id="code" spellcheck="false"></textarea>
     </div>
 
-    <!-- Modal de Misiones -->
-    <div class="modal" id="missionsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🎯 Misiones de Aprendizaje</h2>
-                <button class="modal-close" onclick="closeMissions()">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar" style="width: 0%">0/20</div>
-                </div>
-                <div class="mission-tabs">
-                    <div class="mission-tab active" data-cat="suma" onclick="switchMissionTab(this, 'suma')">Suma</div>
-                    <div class="mission-tab" data-cat="resta" onclick="switchMissionTab(this, 'resta')">Resta</div>
-                    <div class="mission-tab" data-cat="multiplicacion" onclick="switchMissionTab(this, 'multiplicacion')">Multiplicación</div>
-                    <div class="mission-tab" data-cat="division" onclick="switchMissionTab(this, 'division')">División</div>
-                </div>
-                <div class="mission-category active" id="mission-suma"><div class="mission-list" id="missionList-suma"></div></div>
-                <div class="mission-category" id="mission-resta"><div class="mission-list" id="missionList-resta"></div></div>
-                <div class="mission-category" id="mission-multiplicacion"><div class="mission-list" id="missionList-multiplicacion"></div></div>
-                <div class="mission-category" id="mission-division"><div class="mission-list" id="missionList-division"></div></div>
-            </div>
-        </div>
+    <div class="panel">
+      <div style="margin-bottom:10px;color:#a6adc8;">📟 Consola de salida</div>
+      <div class="console" id="output"></div>
     </div>
+  </div>
+</div>
 
-    <!-- Modal de Tutorial -->
-    <div class="modal" id="tutorialModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>📚 Tutorial Básico</h2>
-                <button class="modal-close" onclick="closeTutorial()">×</button>
-            </div>
-            <div class="modal-body" id="tutorialContent"></div>
-        </div>
+<!-- Modal de misión -->
+<div class="modal" id="mission-modal">
+  <div class="modal-content">
+    <h2 id="modal-title"></h2>
+    <div class="objective" id="modal-objective"></div>
+    <div id="modal-hint" style="display:none;background:#f9e2af;color:#1e1e2e;padding:10px;border-radius:6px;margin:10px 0;"></div>
+    <textarea id="mission-code" spellcheck="false" style="width:100%;height:250px;background:#1e1e2e;color:#f5e0dc;border:1px solid #585b70;border-radius:6px;padding:10px;font-family:'Consolas',monospace;font-size:14px;resize:vertical;"></textarea>
+    <div class="console" id="mission-output" style="height:150px;margin-top:10px;"></div>
+    <div class="modal-buttons">
+      <button class="btn-hint" onclick="showHint()">💡 Pista</button>
+      <button class="btn-check" onclick="checkMission()">✓ Verificar</button>
+      <button class="btn-close" onclick="closeMission()">✕ Cerrar</button>
     </div>
+  </div>
+</div>
 
-    <script>
-        // ==================== ESTADO ====================
-        const state = {
-            registers: { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0 },
-            memory: new Array(16).fill(0),
-            flags: { Z: 0, N: 0, C: 0, O: 0 },
-            programCounter: 0,
-            instructions: [],
-            labels: {},
-            running: false,
-            halted: false,
-            stepMode: false,
-            stepTimeout: null,
-            currentMission: null
-        };
+<script>
+/* =========================================================
+   SISTEMA DE TABS
+   ========================================================= */
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabName + '-tab').classList.add('active');
+}
 
-        // ==================== MISIONES ====================
-        // Verificación matemática de cada misión:
-        // suma-1: 7+8=15 ✓ | suma-2: 10+12+8=30 ✓ | suma-3: 25+17=42 → mem[0] ✓
-        // suma-4: 0+5×1=5 ✓ | suma-5: (5+3)+(8+4)=8+12=20 ✓
-        // resta-1: 15-8=7 ✓ | resta-2: 30-10-15=5 ✓ | resta-3: 10-7=3 ✓
-        // resta-4: 25-18=7 ✓ | resta-5: (50-20)-(15-5)=30-10=20 ✓
-        // mult-1: 6×4=24 ✓ | mult-2: 3×4×5=60 ✓ | mult-3: 7×7=49 ✓
-        // mult-4: 0+6×5=30 ✓ | mult-5: (3×4)×(2×5)=12×10=120 ✓
-        // div-1: 20÷4=5 ✓ | div-2: floor(15÷2)=7 ✓ | div-3: 15 mod 2=1 ✓
-        // div-4: 120÷6÷10=20÷10=2 ✓ | div-5: 17÷5=3, 17 mod 5=2 ✓
-        const missions = {
-            suma: [
-                {
-                    id: 'suma-1',
-                    title: 'Primera Suma',
-                    description: 'Carga dos números y súmalos',
-                    objective: 'Resultado en R1 debe ser 15 (7 + 8)',
-                    code: `; Misión 1: Suma básica\nLOAD R1, 7\nLOAD R2, 8\nADD R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 15
-                },
-                {
-                    id: 'suma-2',
-                    title: 'Suma Tres Números',
-                    description: 'Suma tres números diferentes',
-                    objective: 'Resultado en R1 debe ser 30 (10 + 12 + 8)',
-                    code: `; Misión 2: Suma tres números\nLOAD R1, 10\nLOAD R2, 12\nLOAD R3, 8\nADD R1, R2\nADD R1, R3\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 30
-                },
-                {
-                    id: 'suma-3',
-                    title: 'Suma con Memoria',
-                    description: 'Usa la memoria para almacenar resultados',
-                    objective: 'Guardar suma de 25 + 17 en memoria[0]',
-                    code: `; Misión 3: Suma con memoria\nLOAD R1, 25\nLOAD R2, 17\nADD R1, R2\nSTORE R1, 0\nPRINT R1\nHALT`,
-                    validate: () => state.memory[0] === 42
-                },
-                {
-                    id: 'suma-4',
-                    title: 'Suma Incremental',
-                    description: 'Usa INC para sumar 1 repetidamente',
-                    objective: 'R1 debe ser 5 después de 5 incrementos',
-                    code: `; Misión 4: Suma incremental\nLOAD R1, 0\nINC R1\nINC R1\nINC R1\nINC R1\nINC R1\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 5
-                },
-                {
-                    id: 'suma-5',
-                    title: 'Suma Compleja',
-                    description: 'Calcula (5 + 3) + (8 + 4)',
-                    objective: 'Resultado final en R1 debe ser 20',
-                    code: `; Misión 5: Suma compleja\nLOAD R1, 5\nLOAD R2, 3\nADD R1, R2\nLOAD R3, 8\nLOAD R4, 4\nADD R3, R4\nADD R1, R3\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 20
-                }
-            ],
-            resta: [
-                {
-                    id: 'resta-1',
-                    title: 'Primera Resta',
-                    description: 'Resta dos números',
-                    objective: 'Resultado en R1 debe ser 7 (15 - 8)',
-                    code: `; Misión 1: Resta básica\nLOAD R1, 15\nLOAD R2, 8\nSUB R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 7
-                },
-                {
-                    id: 'resta-2',
-                    title: 'Resta Múltiple',
-                    description: 'Resta tres números secuencialmente',
-                    objective: 'Resultado en R1 debe ser 5 (30 - 10 - 15)',
-                    code: `; Misión 2: Resta múltiple\nLOAD R1, 30\nLOAD R2, 10\nLOAD R3, 15\nSUB R1, R2\nSUB R1, R3\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 5
-                },
-                {
-                    id: 'resta-3',
-                    title: 'Resta con Decremento',
-                    description: 'Usa DEC para restar 1 repetidamente',
-                    objective: 'R1 debe ser 3 después de 7 decrementos desde 10',
-                    code: `; Misión 3: Resta con decremento\nLOAD R1, 10\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nDEC R1\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 3
-                },
-                {
-                    id: 'resta-4',
-                    title: 'Diferencia Positiva',
-                    description: 'Calcula la diferencia entre dos números',
-                    objective: 'R1 debe contener 25 - 18 = 7',
-                    code: `; Misión 4: Diferencia positiva\nLOAD R1, 25\nLOAD R2, 18\nSUB R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 7
-                },
-                {
-                    id: 'resta-5',
-                    title: 'Resta Combinada',
-                    description: 'Calcula (50 - 20) - (15 - 5)',
-                    objective: 'Resultado final en R1 debe ser 20',
-                    code: `; Misión 5: Resta combinada\nLOAD R1, 50\nLOAD R2, 20\nSUB R1, R2\nLOAD R3, 15\nLOAD R4, 5\nSUB R3, R4\nSUB R1, R3\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 20
-                }
-            ],
-            multiplicacion: [
-                {
-                    id: 'mult-1',
-                    title: 'Primera Multiplicación',
-                    description: 'Multiplica dos números',
-                    objective: 'Resultado en R1 debe ser 24 (6 × 4)',
-                    code: `; Misión 1: Multiplicación básica\nLOAD R1, 6\nLOAD R2, 4\nMUL R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 24
-                },
-                {
-                    id: 'mult-2',
-                    title: 'Multiplicación Triple',
-                    description: 'Multiplica tres números',
-                    objective: 'Resultado en R1 debe ser 60 (3 × 4 × 5)',
-                    code: `; Misión 2: Multiplicación triple\nLOAD R1, 3\nLOAD R2, 4\nLOAD R3, 5\nMUL R1, R2\nMUL R1, R3\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 60
-                },
-                {
-                    id: 'mult-3',
-                    title: 'Cuadrado',
-                    description: 'Calcula el cuadrado de un número',
-                    objective: 'R1 debe ser 49 (7 × 7)',
-                    code: `; Misión 3: Cuadrado\nLOAD R1, 7\nLOAD R2, 7\nMUL R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 49
-                },
-                {
-                    id: 'mult-4',
-                    title: 'Multiplicación por Suma',
-                    description: 'Simula 5 × 6 usando sumas repetidas',
-                    objective: 'R1 debe ser 30 (sumar 6 cinco veces)',
-                    code: `; Misión 4: Multiplicación por suma\nLOAD R1, 0\nLOAD R2, 6\nADD R1, R2\nADD R1, R2\nADD R1, R2\nADD R1, R2\nADD R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 30
-                },
-                {
-                    id: 'mult-5',
-                    title: 'Producto Complejo',
-                    description: 'Calcula (3 × 4) × (2 × 5)',
-                    objective: 'Resultado final en R1 debe ser 120',
-                    code: `; Misión 5: Producto complejo\nLOAD R1, 3\nLOAD R2, 4\nMUL R1, R2\nLOAD R3, 2\nLOAD R4, 5\nMUL R3, R4\nMUL R1, R3\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 120
-                }
-            ],
-            division: [
-                {
-                    id: 'div-1',
-                    title: 'Primera División',
-                    description: 'Divide dos números',
-                    objective: 'Resultado en R1 debe ser 5 (20 ÷ 4)',
-                    code: `; Misión 1: División básica\nLOAD R1, 20\nLOAD R2, 4\nDIV R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 5
-                },
-                {
-                    id: 'div-2',
-                    title: 'División Entera',
-                    description: 'División con resultado entero (truncado)',
-                    objective: 'R1 debe ser 7 (15 ÷ 2 = 7.5 → 7)',
-                    code: `; Misión 2: División entera\nLOAD R1, 15\nLOAD R2, 2\nDIV R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 7
-                },
-                {
-                    id: 'div-3',
-                    title: 'Módulo',
-                    description: 'Calcula el residuo de una división',
-                    objective: 'R1 debe ser 1 (15 mod 2)',
-                    code: `; Misión 3: Módulo\nLOAD R1, 15\nLOAD R2, 2\nMOD R1, R2\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 1
-                },
-                {
-                    id: 'div-4',
-                    title: 'División en Cadena',
-                    description: 'Divide secuencialmente',
-                    objective: 'R1 debe ser 2 (120 ÷ 6 ÷ 10)',
-                    code: `; Misión 4: División en cadena\nLOAD R1, 120\nLOAD R2, 6\nLOAD R3, 10\nDIV R1, R2\nDIV R1, R3\nPRINT R1\nHALT`,
-                    validate: () => state.registers.R1 === 2
-                },
-                {
-                    id: 'div-5',
-                    title: 'División y Módulo',
-                    description: 'Calcula cociente y residuo de 17 ÷ 5',
-                    objective: 'R1 = 3 (cociente), R3 = 2 (residuo)',
-                    code: `; Misión 5: División y módulo\nLOAD R1, 17\nLOAD R2, 5\nLOAD R3, 17\nDIV R1, R2\nMOD R3, R2\nPRINT R1\nPRINT R3\nHALT`,
-                    validate: () => state.registers.R1 === 3 && state.registers.R3 === 2
-                }
-            ]
-        };
+/* =========================================================
+   TUTORIAL
+   ========================================================= */
+const tutorialSteps = [
+  {
+    title: '¿Qué es una variable?',
+    content: `
+      <p>Una <strong>variable</strong> es como una caja donde guardas información. Puede contener números, texto u otros datos.</p>
+      <p>En Python, creas variables así:</p>
+      <div class="tutorial-code">
+edad = 25<br>
+nombre = "Ana"
+      </div>
+      <p>En Java:</p>
+      <div class="tutorial-code">
+int edad = 25;<br>
+String nombre = "Ana";
+      </div>
+      <p>En C++:</p>
+      <div class="tutorial-code">
+int edad = 25;<br>
+string nombre = "Ana";
+      </div>
+    `
+  },
+  {
+    title: 'Suma: Juntar cantidades',
+    content: `
+      <p>La <strong>suma</strong> combina dos o más números usando el símbolo <code>+</code>.</p>
+      <div class="tutorial-code">
+# Python<br>
+a = 5<br>
+b = 3<br>
+suma = a + b  # suma vale 8<br>
+print("Resultado:", suma)
+      </div>
+      <p><strong>Ejemplo práctico:</strong> Si tienes 5 manzanas y te dan 3 más, ahora tienes 8 manzanas.</p>
+      <div class="tutorial-code">
+// Java<br>
+int a = 5;<br>
+int b = 3;<br>
+int suma = a + b;<br>
+System.out.println("Resultado: " + suma);
+      </div>
+    `
+  },
+  {
+    title: 'Resta: Quitar cantidades',
+    content: `
+      <p>La <strong>resta</strong> quita una cantidad de otra usando el símbolo <code>-</code>.</p>
+      <div class="tutorial-code">
+# Python<br>
+total = 10<br>
+gastado = 4<br>
+restante = total - gastado  # vale 6<br>
+print("Te queda:", restante)
+      </div>
+      <p><strong>Ejemplo práctico:</strong> Si tienes 10 euros y gastas 4, te quedan 6 euros.</p>
+      <div class="tutorial-code">
+// Java<br>
+int total = 10;<br>
+int gastado = 4;<br>
+int restante = total - gastado;<br>
+System.out.println("Te queda: " + restante);
+      </div>
+    `
+  },
+  {
+    title: 'Combinando suma y resta',
+    content: `
+      <p>Puedes combinar varias operaciones en una sola expresión:</p>
+      <div class="tutorial-code">
+# Python<br>
+inicial = 100<br>
+ganancia = 25<br>
+perdida = 10<br>
+final = inicial + ganancia - perdida<br>
+print("Total final:", final)  # 115
+      </div>
+      <p><strong>Orden de operaciones:</strong> Las operaciones se ejecutan de izquierda a derecha cuando son del mismo tipo.</p>
+      <p><strong>Paréntesis:</strong> Usan <code>()</code> para cambiar el orden:</p>
+      <div class="tutorial-code">
+resultado = (10 + 5) * 2  # Primero suma, luego multiplica = 30<br>
+resultado = 10 + 5 * 2    # Primero multiplica, luego suma = 20
+      </div>
+    `
+  },
+  {
+    title: 'Imprimir resultados',
+    content: `
+      <p>Para ver los resultados en pantalla, usamos comandos de impresión:</p>
+      <p><strong>Python:</strong></p>
+      <div class="tutorial-code">
+print("Hola Mundo")<br>
+print("Suma:", 5 + 3)
+      </div>
+      <p><strong>Java:</strong></p>
+      <div class="tutorial-code">
+System.out.println("Hola Mundo");<br>
+System.out.println("Suma: " + (5 + 3));
+      </div>
+      <p><strong>C++:</strong></p>
+      <div class="tutorial-code">
+cout &lt;&lt; "Hola Mundo" &lt;&lt; endl;<br>
+cout &lt;&lt; "Suma: " &lt;&lt; (5 + 3) &lt;&lt; endl;
+      </div>
+      <p>¡Ahora estás listo para las misiones! 🎯</p>
+    `
+  }
+];
 
-        const completedMissions = new Set();
+let currentStep = 0;
 
-        // ==================== TUTORIAL ====================
-        const tutorialSteps = [
-            {
-                title: 'Bienvenido al Tutorial de Suma y Resta',
-                content: `<p>En este tutorial aprenderás los conceptos básicos de suma y resta usando el simulador de ensamblaje.</p>
-                    <p>El ensamblaje es un lenguaje de bajo nivel que controla directamente el procesador mediante instrucciones simples.</p>
-                    <p><strong>Conceptos clave:</strong></p>
-                    <ul style="margin-left: 20px; margin-top: 10px;">
-                        <li><strong>Registros:</strong> Variables rápidas (R0-R7)</li>
-                        <li><strong>Instrucciones:</strong> Comandos que ejecutan operaciones</li>
-                        <li><strong>Memoria:</strong> Almacenamiento permanente de datos</li>
-                    </ul>`
-            },
-            {
-                title: 'Paso 1: Cargar Números',
-                content: `<p>Antes de operar, necesitas cargar números en los registros usando <code>LOAD</code>.</p>
-                    <div class="tutorial-code">LOAD R1, 10  ; Carga el valor 10 en R1<br>LOAD R2, 5   ; Carga el valor 5 en R2</div>
-                    <p><strong>Sintaxis:</strong> <code>LOAD registro, valor</code></p>
-                    <p>Los registros son como variables temporales muy rápidas. Tienes 8 disponibles: R0 hasta R7.</p>`
-            },
-            {
-                title: 'Paso 2: Suma Básica',
-                content: `<p>Para sumar dos registros, usa la instrucción <code>ADD</code>.</p>
-                    <div class="tutorial-code">LOAD R1, 10  ; R1 = 10<br>LOAD R2, 5   ; R2 = 5<br>ADD R1, R2   ; R1 = R1 + R2 = 15<br>PRINT R1     ; Muestra 15</div>
-                    <p><strong>Sintaxis:</strong> <code>ADD destino, origen</code></p>
-                    <p>El resultado se guarda en el primer registro (destino).</p>`
-            },
-            {
-                title: 'Paso 3: Resta Básica',
-                content: `<p>Para restar, usa la instrucción <code>SUB</code>.</p>
-                    <div class="tutorial-code">LOAD R1, 20  ; R1 = 20<br>LOAD R2, 8   ; R2 = 8<br>SUB R1, R2   ; R1 = R1 - R2 = 12<br>PRINT R1     ; Muestra 12</div>
-                    <p><strong>Sintaxis:</strong> <code>SUB destino, origen</code></p>
-                    <p>El resultado se guarda en el primer registro (destino).</p>`
-            },
-            {
-                title: 'Paso 4: Incremento y Decremento',
-                content: `<p>Para sumar o restar 1, puedes usar <code>INC</code> y <code>DEC</code>.</p>
-                    <div class="tutorial-code">LOAD R1, 5   ; R1 = 5<br>INC R1       ; R1 = 6<br>INC R1       ; R1 = 7<br>DEC R1       ; R1 = 6<br>PRINT R1     ; Muestra 6</div>
-                    <p><strong>Sintaxis:</strong> <code>INC registro</code> o <code>DEC registro</code></p>
-                    <p>Son más eficientes que usar ADD o SUB con 1.</p>`
-            },
-            {
-                title: 'Paso 5: Operaciones Múltiples',
-                content: `<p>Puedes encadenar múltiples operaciones:</p>
-                    <div class="tutorial-code">LOAD R1, 10  ; R1 = 10<br>LOAD R2, 5   ; R2 = 5<br>LOAD R3, 3   ; R3 = 3<br><br>ADD R1, R2   ; R1 = 10 + 5 = 15<br>SUB R1, R3   ; R1 = 15 - 3 = 12<br>PRINT R1     ; Muestra 12</div>
-                    <p>Cada instrucción modifica el registro destino, permitiéndote construir cálculos complejos paso a paso.</p>`
-            },
-            {
-                title: 'Paso 6: Usando Memoria',
-                content: `<p>Puedes guardar resultados en memoria para usarlos después:</p>
-                    <div class="tutorial-code">LOAD R1, 25  ; R1 = 25<br>LOAD R2, 17  ; R2 = 17<br>ADD R1, R2   ; R1 = 42<br>STORE R1, 0  ; Guarda R1 en mem[0]<br><br>LOAD R3, 10  ; R3 = 10<br>LOADM R4, 0  ; R4 = mem[0] = 42<br>SUB R4, R3   ; R4 = 42 - 10 = 32<br>PRINT R4     ; Muestra 32</div>
-                    <p><strong>STORE:</strong> Guarda registro en memoria<br><strong>LOADM:</strong> Carga desde memoria a registro</p>`
-            },
-            {
-                title: '¡Felicidades!',
-                content: `<p>Has completado el tutorial básico de suma y resta.</p>
-                    <p><strong>Resumen de lo aprendido:</strong></p>
-                    <ul style="margin-left: 20px; margin-top: 10px;">
-                        <li>Cargar números con <code>LOAD</code></li>
-                        <li>Sumar con <code>ADD</code></li>
-                        <li>Restar con <code>SUB</code></li>
-                        <li>Incrementar/decrementar con <code>INC</code>/<code>DEC</code></li>
-                        <li>Encadenar operaciones</li>
-                        <li>Usar memoria con <code>STORE</code>/<code>LOADM</code></li>
-                    </ul>
-                    <p style="margin-top: 15px;"><strong>Próximos pasos:</strong></p>
-                    <p>¡Ahora intenta completar las misiones de suma y resta para practicar lo aprendido!</p>`
-            }
-        ];
+function renderTutorial() {
+  const content = document.getElementById('tutorial-content');
+  const step = tutorialSteps[currentStep];
+  content.innerHTML = `
+    <div class="tutorial-step">
+      <h3>Paso ${currentStep + 1}: ${step.title}</h3>
+      ${step.content}
+    </div>
+  `;
+  document.getElementById('prev-btn').disabled = currentStep === 0;
+  document.getElementById('next-btn').disabled = currentStep === tutorialSteps.length - 1;
+}
 
-        let currentTutorialStep = 0;
+function nextStep() {
+  if (currentStep < tutorialSteps.length - 1) {
+    currentStep++;
+    renderTutorial();
+  }
+}
 
-        // ==================== INICIALIZACIÓN UI ====================
-        function initMemoryGrid() {
-            const grid = document.getElementById('memoryGrid');
-            grid.innerHTML = '';
-            for (let i = 0; i < 16; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'memory-cell';
-                cell.id = `mem-${i}`;
-                cell.innerHTML = `<div class="addr">[${i}]</div><div class="val">0</div>`;
-                grid.appendChild(cell);
-            }
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    renderTutorial();
+  }
+}
+
+renderTutorial();
+
+/* =========================================================
+   SISTEMA DE MISIONES
+   ========================================================= */
+const missions = {
+  level1: {
+    title: '🌱 Nivel 1: Suma y Resta',
+    missions: [
+      {
+        id: 'm1_1',
+        title: 'Primera Suma',
+        description: 'Suma dos números: 5 + 3 e imprime el resultado',
+        objective: 'El programa debe imprimir: 8',
+        hint: 'Crea dos variables, súmalas y usa print/println/cout',
+        validate: (output) => output.trim() === '8',
+        starterCode: {
+          python: '# Suma 5 + 3 e imprime el resultado\n',
+          java: '// Suma 5 + 3 e imprime el resultado\n',
+          cpp: '// Suma 5 + 3 e imprime el resultado\n'
         }
-
-        function initEditor() {
-            const editor = document.getElementById('codeEditor');
-            editor.addEventListener('input', updateLineNumbers);
-            editor.addEventListener('scroll', syncScroll);
-            editor.addEventListener('keydown', handleTab);
-            updateLineNumbers();
+      },
+      {
+        id: 'm1_2',
+        title: 'Resta Básica',
+        description: 'Resta 10 - 4 e imprime el resultado',
+        objective: 'El programa debe imprimir: 6',
+        hint: 'Usa el operador - para restar',
+        validate: (output) => output.trim() === '6',
+        starterCode: {
+          python: '# Resta 10 - 4 e imprime el resultado\n',
+          java: '// Resta 10 - 4 e imprime el resultado\n',
+          cpp: '// Resta 10 - 4 e imprime el resultado\n'
         }
-
-        function updateLineNumbers() {
-            const editor = document.getElementById('codeEditor');
-            const lines = editor.value.split('\n').length;
-            document.getElementById('lineNumbers').innerHTML =
-                Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+      },
+      {
+        id: 'm1_3',
+        title: 'Combinando Operaciones',
+        description: 'Calcula: 15 + 7 - 3 e imprime el resultado',
+        objective: 'El programa debe imprimir: 19',
+        hint: 'Puedes hacer las operaciones en una sola línea o en pasos',
+        validate: (output) => output.trim() === '19',
+        starterCode: {
+          python: '# Calcula 15 + 7 - 3\n',
+          java: '// Calcula 15 + 7 - 3\n',
+          cpp: '// Calcula 15 + 7 - 3\n'
         }
-
-        function syncScroll() {
-            document.getElementById('lineNumbers').scrollTop =
-                document.getElementById('codeEditor').scrollTop;
+      },
+      {
+        id: 'm1_4',
+        title: 'Variables con Texto',
+        description: 'Crea una variable con tu edad, otra con 5, súmalas e imprime: "Mi edad más 5 es: [resultado]"',
+        objective: 'Si tu edad es 20, debe imprimir: "Mi edad más 5 es: 25"',
+        hint: 'Usa concatenación de strings con +',
+        validate: (output) => output.includes('Mi edad más 5 es:') && /\d+/.test(output),
+        starterCode: {
+          python: '# Crea variables y concatena texto\nedad = 20\n',
+          java: '// Crea variables y concatena texto\nint edad = 20;\n',
+          cpp: '// Crea variables y concatena texto\nint edad = 20;\n'
         }
-
-        function handleTab(e) {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                const editor = e.target;
-                const start = editor.selectionStart;
-                const end = editor.selectionEnd;
-                editor.value = editor.value.substring(0, start) + '    ' + editor.value.substring(end);
-                editor.selectionStart = editor.selectionEnd = start + 4;
-            }
+      }
+    ]
+  },
+  level2: {
+    title: '🌿 Nivel 2: Multiplicación y División',
+    missions: [
+      {
+        id: 'm2_1',
+        title: 'Multiplicación Simple',
+        description: 'Multiplica 6 * 7 e imprime el resultado',
+        objective: 'El programa debe imprimir: 42',
+        hint: 'Usa el operador * para multiplicar',
+        validate: (output) => output.trim() === '42',
+        starterCode: {
+          python: '# Multiplica 6 * 7\n',
+          java: '// Multiplica 6 * 7\n',
+          cpp: '// Multiplica 6 * 7\n'
         }
-
-        // ==================== PARSING ====================
-        function parseProgram(code) {
-            const lines = code.split('\n');
-            const instructions = [];
-            const labels = {};
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (!line || line.startsWith(';')) continue;
-
-                const commentIdx = line.indexOf(';');
-                if (commentIdx !== -1) line = line.substring(0, commentIdx).trim();
-                if (!line) continue;
-
-                if (line.endsWith(':')) {
-                    labels[line.slice(0, -1).trim().toUpperCase()] = instructions.length;
-                    continue;
-                }
-
-                const parts = line.split(/[\s,]+/).filter(p => p);
-                if (parts.length > 0) {
-                    instructions.push({
-                        opcode: parts[0].toUpperCase(),
-                        operands: parts.slice(1),
-                        lineNum: i + 1,
-                        raw: line
-                    });
-                }
-            }
-            return { instructions, labels };
+      },
+      {
+        id: 'm2_2',
+        title: 'División Básica',
+        description: 'Divide 20 entre 4 e imprime el resultado',
+        objective: 'El programa debe imprimir: 5.0 o 5',
+        hint: 'Usa el operador / para dividir',
+        validate: (output) => output.trim() === '5.0' || output.trim() === '5',
+        starterCode: {
+          python: '# Divide 20 / 4\n',
+          java: '// Divide 20 / 4\n',
+          cpp: '// Divide 20 / 4\n'
         }
-
-        // ==================== EJECUCIÓN ====================
-        function setRegister(reg, value) {
-            reg = reg.toUpperCase();
-            if (!state.registers.hasOwnProperty(reg)) throw new Error(`Registro inválido: ${reg}`);
-            state.registers[reg] = value;
-            updateFlags(value);
-            updateRegisterDisplay(reg);
+      },
+      {
+        id: 'm2_3',
+        title: 'Área de un Rectángulo',
+        description: 'Calcula el área de un rectángulo de 8 x 5 e imprime: "El área es: [resultado]"',
+        objective: 'Debe imprimir: "El área es: 40"',
+        hint: 'Área = base × altura',
+        validate: (output) => output.includes('El área es:') && output.includes('40'),
+        starterCode: {
+          python: '# Calcula el área de un rectángulo\nbase = 8\naltura = 5\n',
+          java: '// Calcula el área de un rectángulo\nint base = 8;\nint altura = 5;\n',
+          cpp: '// Calcula el área de un rectángulo\nint base = 8;\nint altura = 5;\n'
         }
-
-        function parseOperand(operand) {
-            const upper = operand.toUpperCase();
-            if (state.registers.hasOwnProperty(upper)) return state.registers[upper];
-            const num = parseInt(operand);
-            if (!isNaN(num)) return num;
-            throw new Error(`Operando inválido: ${operand}`);
+      },
+      {
+        id: 'm2_4',
+        title: 'Promedio de Notas',
+        description: 'Calcula el promedio de 3 notas: 8, 9 y 7. Imprime: "Promedio: [resultado]"',
+        objective: 'Debe imprimir: "Promedio: 8.0" o "Promedio: 8"',
+        hint: 'Promedio = (nota1 + nota2 + nota3) / 3',
+        validate: (output) => output.includes('Promedio:') && (output.includes('8.0') || output.includes('8')),
+        starterCode: {
+          python: '# Calcula el promedio de 3 notas\nnota1 = 8\nnota2 = 9\nnota3 = 7\n',
+          java: '// Calcula el promedio de 3 notas\nint nota1 = 8;\nint nota2 = 9;\nint nota3 = 7;\n',
+          cpp: '// Calcula el promedio de 3 notas\nint nota1 = 8;\nint nota2 = 9;\nint nota3 = 7;\n'
         }
-
-        function updateFlags(value) {
-            state.flags.Z = (value === 0) ? 1 : 0;
-            state.flags.N = (value < 0) ? 1 : 0;
-            state.flags.C = (value > 99999) ? 1 : 0;
-            state.flags.O = (value > 2147483647 || value < -2147483648) ? 1 : 0;
-            updateFlagsDisplay();
+      }
+    ]
+  },
+  level3: {
+    title: '🌳 Nivel 3: Arrays y Listas',
+    missions: [
+      {
+        id: 'm3_1',
+        title: 'Crear una Lista',
+        description: 'Crea una lista con los números [10, 20, 30] e imprímela',
+        objective: 'Debe imprimir: [10, 20, 30] o similar',
+        hint: 'Python: [10,20,30] | Java: ArrayList | C++: vector',
+        validate: (output) => output.includes('10') && output.includes('20') && output.includes('30'),
+        starterCode: {
+          python: '# Crea una lista e imprímela\n',
+          java: '// Crea una lista e imprímela\n',
+          cpp: '// Crea una lista e imprímela\n'
         }
-
-        function executeInstruction(instr) {
-            const { opcode, operands } = instr;
-
-            switch (opcode) {
-                case 'LOAD': {
-                    if (operands.length < 2) throw new Error('LOAD requiere: registro, valor');
-                    const reg = operands[0].toUpperCase();
-                    const val = parseInt(operands[1]);
-                    if (isNaN(val)) throw new Error(`Valor inválido: ${operands[1]}`);
-                    setRegister(reg, val);
-                    logConsole(`LOAD ${reg} ← ${val}`, 'step');
-                    break;
-                }
-                case 'ADD': {
-                    if (operands.length < 2) throw new Error('ADD requiere: Rn, Rm');
-                    const reg = operands[0].toUpperCase();
-                    const val = parseOperand(operands[1]);
-                    const old = state.registers[reg];
-                    setRegister(reg, old + val);
-                    logConsole(`ADD ${reg} = ${old} + ${val} = ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'SUB': {
-                    if (operands.length < 2) throw new Error('SUB requiere: Rn, Rm');
-                    const reg = operands[0].toUpperCase();
-                    const val = parseOperand(operands[1]);
-                    const old = state.registers[reg];
-                    setRegister(reg, old - val);
-                    logConsole(`SUB ${reg} = ${old} - ${val} = ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'MUL': {
-                    if (operands.length < 2) throw new Error('MUL requiere: Rn, Rm');
-                    const reg = operands[0].toUpperCase();
-                    const val = parseOperand(operands[1]);
-                    const old = state.registers[reg];
-                    setRegister(reg, old * val);
-                    logConsole(`MUL ${reg} = ${old} × ${val} = ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'DIV': {
-                    if (operands.length < 2) throw new Error('DIV requiere: Rn, Rm');
-                    const reg = operands[0].toUpperCase();
-                    const val = parseOperand(operands[1]);
-                    if (val === 0) throw new Error('Error: División entre cero');
-                    const old = state.registers[reg];
-                    setRegister(reg, Math.floor(old / val));
-                    logConsole(`DIV ${reg} = ${old} ÷ ${val} = ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'MOD': {
-                    if (operands.length < 2) throw new Error('MOD requiere: Rn, Rm');
-                    const reg = operands[0].toUpperCase();
-                    const val = parseOperand(operands[1]);
-                    if (val === 0) throw new Error('Error: División entre cero');
-                    const old = state.registers[reg];
-                    setRegister(reg, old % val);
-                    logConsole(`MOD ${reg} = ${old} mod ${val} = ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'INC': {
-                    if (operands.length < 1) throw new Error('INC requiere: Rn');
-                    const reg = operands[0].toUpperCase();
-                    state.registers[reg]++;
-                    updateFlags(state.registers[reg]);
-                    updateRegisterDisplay(reg);
-                    logConsole(`INC ${reg} = ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'DEC': {
-                    if (operands.length < 1) throw new Error('DEC requiere: Rn');
-                    const reg = operands[0].toUpperCase();
-                    state.registers[reg]--;
-                    updateFlags(state.registers[reg]);
-                    updateRegisterDisplay(reg);
-                    logConsole(`DEC ${reg} = ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'CMP': {
-                    if (operands.length < 2) throw new Error('CMP requiere: Rn, Rm');
-                    const val1 = parseOperand(operands[0]);
-                    const val2 = parseOperand(operands[1]);
-                    const diff = val1 - val2;
-                    state.flags.Z = (diff === 0) ? 1 : 0;
-                    state.flags.N = (diff < 0) ? 1 : 0;
-                    updateFlagsDisplay();
-                    logConsole(`CMP ${val1} vs ${val2} → Z=${state.flags.Z}, N=${state.flags.N}`, 'step');
-                    break;
-                }
-                case 'PRINT': {
-                    if (operands.length < 1) throw new Error('PRINT requiere: Rn');
-                    const val = parseOperand(operands[0]);
-                    logConsole(`[OUTPUT] ${val}`, 'output');
-                    break;
-                }
-                case 'STORE': {
-                    if (operands.length < 2) throw new Error('STORE requiere: Rn, dirección');
-                    const reg = operands[0].toUpperCase();
-                    const addr = parseInt(operands[1]);
-                    if (isNaN(addr) || addr < 0 || addr >= 16) throw new Error(`Dirección inválida: ${operands[1]}`);
-                    state.memory[addr] = state.registers[reg];
-                    updateMemoryDisplay(addr);
-                    logConsole(`STORE mem[${addr}] ← ${state.registers[reg]}`, 'step');
-                    break;
-                }
-                case 'LOADM': {
-                    if (operands.length < 2) throw new Error('LOADM requiere: Rn, dirección');
-                    const reg = operands[0].toUpperCase();
-                    const addr = parseInt(operands[1]);
-                    if (isNaN(addr) || addr < 0 || addr >= 16) throw new Error(`Dirección inválida: ${operands[1]}`);
-                    setRegister(reg, state.memory[addr]);
-                    logConsole(`LOADM ${reg} ← mem[${addr}] = ${state.memory[addr]}`, 'step');
-                    break;
-                }
-                case 'JMP': {
-                    const label = operands[0].toUpperCase();
-                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
-                    state.programCounter = state.labels[label];
-                    logConsole(`JMP → ${label}`, 'step');
-                    return;
-                }
-                case 'JZ': {
-                    const label = operands[0].toUpperCase();
-                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
-                    if (state.flags.Z === 1) {
-                        state.programCounter = state.labels[label];
-                        logConsole(`JZ → ${label} (SALTADO)`, 'step');
-                        return;
-                    }
-                    logConsole(`JZ → ${label} (no saltado)`, 'step');
-                    break;
-                }
-                case 'JNZ': {
-                    const label = operands[0].toUpperCase();
-                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
-                    if (state.flags.Z === 0) {
-                        state.programCounter = state.labels[label];
-                        logConsole(`JNZ → ${label} (SALTADO)`, 'step');
-                        return;
-                    }
-                    logConsole(`JNZ → ${label} (no saltado)`, 'step');
-                    break;
-                }
-                case 'JL': {
-                    const label = operands[0].toUpperCase();
-                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
-                    if (state.flags.N === 1) {
-                        state.programCounter = state.labels[label];
-                        logConsole(`JL → ${label} (SALTADO)`, 'step');
-                        return;
-                    }
-                    logConsole(`JL → ${label} (no saltado)`, 'step');
-                    break;
-                }
-                case 'JG': {
-                    const label = operands[0].toUpperCase();
-                    if (!state.labels.hasOwnProperty(label)) throw new Error(`Etiqueta no encontrada: ${label}`);
-                    if (state.flags.Z === 0 && state.flags.N === 0) {
-                        state.programCounter = state.labels[label];
-                        logConsole(`JG → ${label} (SALTADO)`, 'step');
-                        return;
-                    }
-                    logConsole(`JG → ${label} (no saltado)`, 'step');
-                    break;
-                }
-                case 'HALT': {
-                    state.halted = true;
-                    state.running = false;
-                    logConsole('HALT — Ejecución detenida.', 'warn');
-                    break;
-                }
-                case 'MOV': {
-                    if (operands.length < 2) throw new Error('MOV requiere: Rn, Rm');
-                    const dest = operands[0].toUpperCase();
-                    const val = parseOperand(operands[1]);
-                    setRegister(dest, val);
-                    logConsole(`MOV ${dest} ← ${val}`, 'step');
-                    break;
-                }
-                case 'CLEAR':
-                case 'CLR': {
-                    if (operands.length < 1) throw new Error('CLR requiere: Rn');
-                    const reg = operands[0].toUpperCase();
-                    setRegister(reg, 0);
-                    logConsole(`CLR ${reg} = 0`, 'step');
-                    break;
-                }
-                default:
-                    throw new Error(`Instrucción desconocida: ${opcode}`);
-            }
-
-            state.programCounter++;
+      },
+      {
+        id: 'm3_2',
+        title: 'Acceder a Elementos',
+        description: 'Crea una lista [5, 10, 15, 20] e imprime el segundo elemento',
+        objective: 'Debe imprimir: 10',
+        hint: 'Los índices empiezan en 0: lista[0] es el primero, lista[1] es el segundo',
+        validate: (output) => output.trim() === '10',
+        starterCode: {
+          python: '# Crea una lista e imprime el segundo elemento\nnumeros = [5, 10, 15, 20]\n',
+          java: '// Crea una lista e imprime el segundo elemento\n',
+          cpp: '// Crea una lista e imprime el segundo elemento\n'
         }
-
-        // ==================== CONTROL DE EJECUCIÓN ====================
-        function runProgram() {
-            if (state.running) return;
-
-            const code = document.getElementById('codeEditor').value;
-            if (!code.trim()) {
-                logConsole('Error: No hay código para ejecutar.', 'error');
-                return;
-            }
-
-            resetState();
-            clearConsole();
-
-            try {
-                const parsed = parseProgram(code);
-                state.instructions = parsed.instructions;
-                state.labels = parsed.labels;
-                state.running = true;
-                state.halted = false;
-                state.programCounter = 0;
-
-                logConsole('━━━ Ejecución iniciada ━━━', 'info');
-                if (state.currentMission) {
-                    logConsole(`🎯 Misión activa: ${state.currentMission.title}`, 'mission');
-                    logConsole(`Objetivo: ${state.currentMission.objective}`, 'mission');
-                }
-                executeAll();
-            } catch (e) {
-                logConsole(`Error de parsing: ${e.message}`, 'error');
-                state.running = false;
-            }
+      },
+      {
+        id: 'm3_3',
+        title: 'Modificar Elementos',
+        description: 'Crea una lista [1, 2, 3], cambia el segundo elemento a 99 e imprime la lista',
+        objective: 'Debe imprimir: [1, 99, 3] o similar',
+        hint: 'Usa lista[1] = 99 para modificar',
+        validate: (output) => output.includes('1') && output.includes('99') && output.includes('3'),
+        starterCode: {
+          python: '# Modifica el segundo elemento\nnumeros = [1, 2, 3]\n',
+          java: '// Modifica el segundo elemento\n',
+          cpp: '// Modifica el segundo elemento\n'
         }
-
-        function executeAll() {
-            const speed = 1050 - document.getElementById('speedRange').value;
-            let maxSteps = 10000;
-
-            function step() {
-                // CORRECCIÓN: Detectar fin de ejecución (por HALT o fin de instrucciones)
-                const finished = state.halted ||
-                                 state.programCounter >= state.instructions.length ||
-                                 !state.running;
-
-                if (finished) {
-                    if (!state.halted && state.programCounter >= state.instructions.length) {
-                        logConsole('━━━ Programa finalizado ━━━', 'info');
-                    }
-                    state.running = false;
-
-                    // CORRECCIÓN CRÍTICA: Validar misión al terminar
-                    // (antes solo se validaba si NO había HALT, lo cual era un bug)
-                    if (state.currentMission) {
-                        checkMissionCompletion();
-                    }
-                    return;
-                }
-
-                if (maxSteps-- <= 0) {
-                    logConsole('Error: Límite de instrucciones alcanzado (posible loop infinito)', 'error');
-                    state.running = false;
-                    return;
-                }
-
-                try {
-                    const instr = state.instructions[state.programCounter];
-                    logConsole(`[PC:${state.programCounter}] ${instr.raw}`, 'step');
-                    executeInstruction(instr);
-                } catch (e) {
-                    logConsole(`Error en línea ${state.instructions[state.programCounter].lineNum}: ${e.message}`, 'error');
-                    state.running = false;
-                    // También validar en caso de error (fallará, pero es consistente)
-                    if (state.currentMission) {
-                        checkMissionCompletion();
-                    }
-                    return;
-                }
-
-                if (state.stepMode) {
-                    state.stepMode = false;
-                    state.running = false;
-                    return;
-                }
-
-                state.stepTimeout = setTimeout(step, speed);
-            }
-
-            step();
+      },
+      {
+        id: 'm3_4',
+        title: 'Agregar Elementos',
+        description: 'Crea una lista vacía, agrega 3 números (5, 10, 15) e imprime la lista final',
+        objective: 'Debe imprimir: [5, 10, 15] o similar',
+        hint: 'Python: .append() | Java: .add() | C++: .push_back()',
+        validate: (output) => output.includes('5') && output.includes('10') && output.includes('15'),
+        starterCode: {
+          python: '# Crea lista vacía y agrega elementos\n',
+          java: '// Crea lista vacía y agrega elementos\n',
+          cpp: '// Crea lista vacía y agrega elementos\n'
         }
+      }
+    ]
+  }
+};
 
-        function stepProgram() {
-            if (state.running && !state.stepMode) return;
+let completedMissions = new Set();
+let currentMission = null;
 
-            const code = document.getElementById('codeEditor').value;
-            if (!code.trim()) {
-                logConsole('Error: No hay código para ejecutar.', 'error');
-                return;
-            }
+function renderMissions() {
+  const container = document.getElementById('missions-content');
+  container.innerHTML = '';
+  
+  Object.values(missions).forEach(level => {
+    const levelDiv = document.createElement('div');
+    levelDiv.className = 'mission-level';
+    levelDiv.innerHTML = `<h2>${level.title}</h2>`;
+    
+    const grid = document.createElement('div');
+    grid.className = 'mission-grid';
+    
+    level.missions.forEach(mission => {
+      const card = document.createElement('div');
+      card.className = 'mission-card' + (completedMissions.has(mission.id) ? ' completed' : '');
+      card.innerHTML = `
+        <h4>
+          ${completedMissions.has(mission.id) ? '✅' : '📝'} ${mission.title}
+        </h4>
+        <p>${mission.description}</p>
+        <div class="mission-stars">
+          <span class="star ${completedMissions.has(mission.id) ? 'earned' : ''}">⭐</span>
+        </div>
+      `;
+      card.onclick = () => openMission(mission);
+      grid.appendChild(card);
+    });
+    
+    levelDiv.appendChild(grid);
+    container.appendChild(levelDiv);
+  });
+  
+  updateProgress();
+}
 
-            if (!state.running) {
-                if (state.programCounter === 0 || state.halted || state.programCounter >= state.instructions.length) {
-                    resetState();
-                    clearConsole();
-                    try {
-                        const parsed = parseProgram(code);
-                        state.instructions = parsed.instructions;
-                        state.labels = parsed.labels;
-                        logConsole('━━━ Modo paso a paso ━━━', 'info');
-                    } catch (e) {
-                        logConsole(`Error de parsing: ${e.message}`, 'error');
-                        return;
-                    }
-                }
-                state.running = true;
-                state.stepMode = true;
-                state.halted = false;
-                executeAll();
-            } else {
-                state.stepMode = true;
-                executeAll();
-            }
-        }
+function updateProgress() {
+  const total = Object.values(missions).reduce((sum, level) => sum + level.missions.length, 0);
+  const completed = completedMissions.size;
+  const percent = Math.round((completed / total) * 100);
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = percent + '%';
+  fill.textContent = `${completed}/${total} (${percent}%)`;
+}
 
-        function resetSimulator() {
-            if (state.stepTimeout) clearTimeout(state.stepTimeout);
-            const currentMission = state.currentMission; // Preservar misión activa
-            resetState();
-            state.currentMission = currentMission;
-            clearConsole();
-            logConsole('[Sistema] Simulador reiniciado.', 'info');
-            if (currentMission) {
-                logConsole(`🎯 Misión activa: ${currentMission.title}`, 'mission');
-            }
-        }
+function openMission(mission) {
+  currentMission = mission;
+  const lang = document.getElementById('lang').value;
+  
+  document.getElementById('modal-title').textContent = mission.title;
+  document.getElementById('modal-objective').innerHTML = `
+    <strong>Objetivo:</strong><br>${mission.objective}
+  `;
+  document.getElementById('mission-code').value = mission.starterCode[lang];
+  document.getElementById('mission-output').innerHTML = '';
+  document.getElementById('modal-hint').style.display = 'none';
+  document.getElementById('mission-modal').classList.add('active');
+}
 
-        function resetState() {
-            if (state.stepTimeout) clearTimeout(state.stepTimeout);
-            for (let r in state.registers) state.registers[r] = 0;
-            state.memory.fill(0);
-            state.flags = { Z: 0, N: 0, C: 0, O: 0 };
-            state.programCounter = 0;
-            state.instructions = [];
-            state.labels = {};
-            state.running = false;
-            state.halted = false;
-            state.stepMode = false;
-            updateAllDisplays();
-        }
+function closeMission() {
+  document.getElementById('mission-modal').classList.remove('active');
+  currentMission = null;
+}
 
-        // ==================== DISPLAY ====================
-        function updateRegisterDisplay(reg) {
-            const el = document.getElementById(`reg-${reg}`);
-            if (el) {
-                el.querySelector('.reg-value').textContent = state.registers[reg];
-                el.classList.add('active');
-                setTimeout(() => el.classList.remove('active'), 500);
-            }
-        }
+function showHint() {
+  const hint = document.getElementById('modal-hint');
+  hint.textContent = '💡 ' + currentMission.hint;
+  hint.style.display = 'block';
+}
 
-        function updateMemoryDisplay(addr) {
-            const el = document.getElementById(`mem-${addr}`);
-            if (el) {
-                el.querySelector('.val').textContent = state.memory[addr];
-                el.classList.add('active');
-                setTimeout(() => el.classList.remove('active'), 500);
-            }
-        }
+function checkMission() {
+  const code = document.getElementById('mission-code').value;
+  const lang = document.getElementById('lang').value;
+  const outputEl = document.getElementById('mission-output');
+  outputEl.innerHTML = '';
+  
+  // Ejecutar código
+  const oldOutput = document.getElementById('output');
+  const tempOutput = document.createElement('div');
+  tempOutput.className = 'console';
+  tempOutput.style.height = '150px';
+  tempOutput.style.marginTop = '10px';
+  
+  try {
+    const env = { vars: {} };
+    let output = '';
+    
+    // Capturar salida
+    const originalPrint = window.print;
+    window.print = function(msg, cls='') {
+      output += msg + '\n';
+    };
+    
+    if (lang === 'python') runPython(code);
+    else if (lang === 'java') runJava(code);
+    else if (lang === 'cpp') runCpp(code);
+    
+    window.print = originalPrint;
+    
+    // Mostrar salida
+    outputEl.innerHTML = `<div style="color:#a6e3a1;">${output}</div>`;
+    
+    // Validar
+    if (currentMission.validate(output)) {
+      completedMissions.add(currentMission.id);
+      outputEl.innerHTML += `<div class="success" style="margin-top:10px;">✅ ¡Misión completada!</div>`;
+      renderMissions();
+      setTimeout(closeMission, 2000);
+    } else {
+      outputEl.innerHTML += `<div class="err" style="margin-top:10px;">❌ No cumple el objetivo. Revisa tu código.</div>`;
+    }
+  } catch (e) {
+    outputEl.innerHTML = `<div class="err">Error: ${e.message}</div>`;
+  }
+}
 
-        function updateFlagsDisplay() {
-            ['Z', 'N', 'C', 'O'].forEach(f => {
-                const el = document.getElementById(`flag-${f}`);
-                el.textContent = state.flags[f];
-                el.className = `flag-val ${state.flags[f] ? 'on' : ''}`;
-            });
-        }
+renderMissions();
 
-        function updateAllDisplays() {
-            for (let r in state.registers) {
-                const el = document.getElementById(`reg-${r}`);
-                if (el) el.querySelector('.reg-value').textContent = state.registers[r];
-            }
-            for (let i = 0; i < 16; i++) {
-                const el = document.getElementById(`mem-${i}`);
-                if (el) el.querySelector('.val').textContent = state.memory[i];
-            }
-            updateFlagsDisplay();
-        }
+/* =========================================================
+   SIMULADOR (código del ejercicio anterior)
+   ========================================================= */
+const outputEl = document.getElementById('output');
+const codeEl   = document.getElementById('code');
+const langEl   = document.getElementById('lang');
 
-        // ==================== CONSOLA ====================
-        function logConsole(message, type = 'info') {
-            const output = document.getElementById('consoleOutput');
-            const line = document.createElement('div');
-            line.className = `log-${type}`;
-            line.textContent = message;
-            output.appendChild(line);
-            output.scrollTop = output.scrollHeight;
-        }
+function print(msg, cls='') {
+  const span = document.createElement('span');
+  span.className = cls;
+  span.textContent = msg + '\n';
+  outputEl.appendChild(span);
+  outputEl.scrollTop = outputEl.scrollHeight;
+}
+function clearOutput(){ outputEl.innerHTML=''; }
+function clearAll(){ codeEl.value=''; clearOutput(); }
 
-        function clearConsole() {
-            document.getElementById('consoleOutput').innerHTML = '';
-        }
+/* Tokenizer y Parser (igual que antes) */
+function tokenize(expr){
+  const tokens=[];
+  let i=0;
+  while(i<expr.length){
+    const c=expr[i];
+    if(c===' '||c==='\t'){ i++; continue; }
+    if(/[0-9.]/.test(c)){
+      let n='';
+      while(i<expr.length && /[0-9.]/.test(expr[i])) n+=expr[i++];
+      tokens.push({type:'num', value:parseFloat(n)});
+      continue;
+    }
+    if(/[a-zA-Z_]/.test(c)){
+      let id='';
+      while(i<expr.length && /[a-zA-Z0-9_]/.test(expr[i])) id+=expr[i++];
+      tokens.push({type:'id', value:id});
+      continue;
+    }
+    if(c==='"' || c==="'"){
+      const q=c; let s=''; i++;
+      while(i<expr.length && expr[i]!==q){ s+=expr[i++]; }
+      i++;
+      tokens.push({type:'str', value:s});
+      continue;
+    }
+    if('+-*/()[]{}.,'.includes(c)){
+      tokens.push({type:'op', value:c}); i++; continue;
+    }
+    throw new Error('Carácter inesperado: '+c);
+  }
+  return tokens;
+}
 
-        // ==================== MISIONES ====================
-        function openMissions() {
-            document.getElementById('missionsModal').classList.add('active');
-            renderMissions();
-        }
+function parseExpr(tokens, pos, env){
+  return parseAddSub(tokens, pos, env);
+}
+function parseAddSub(tokens, pos, env){
+  let [left, p] = parseMulDiv(tokens, pos, env);
+  while(p<tokens.length && tokens[p].type==='op' && '+-'.includes(tokens[p].value)){
+    const op=tokens[p].value; p++;
+    let [right, np] = parseMulDiv(tokens, p, env);
+    p=np;
+    if(op==='+'){
+      if(typeof left==='string' || typeof right==='string')
+        left = String(left)+String(right);
+      else left = left+right;
+    } else left = left-right;
+  }
+  return [left, p];
+}
+function parseMulDiv(tokens, pos, env){
+  let [left, p] = parseUnary(tokens, pos, env);
+  while(p<tokens.length && tokens[p].type==='op' && '*/'.includes(tokens[p].value)){
+    const op=tokens[p].value; p++;
+    let [right, np] = parseUnary(tokens, p, env);
+    p=np;
+    if(op==='*') left=left*right;
+    else {
+      if(right===0) throw new Error('División por cero');
+      left=left/right;
+    }
+  }
+  return [left, p];
+}
+function parseUnary(tokens, pos, env){
+  if(pos<tokens.length && tokens[pos].type==='op' && tokens[pos].value==='-'){
+    let [v,p]=parsePrimary(tokens,pos+1,env);
+    return [-v,p];
+  }
+  return parsePrimary(tokens,pos,env);
+}
+function parsePrimary(tokens, pos, env){
+  if(pos>=tokens.length) throw new Error('Expresión incompleta');
+  const t=tokens[pos];
+  let value, p=pos+1;
+  if(t.type==='num') value=t.value;
+  else if(t.type==='str') value=t.value;
+  else if(t.type==='id'){
+    if(!(t.value in env.vars)) throw new Error('Variable no definida: '+t.value);
+    value = env.vars[t.value];
+    while(p<tokens.length && tokens[p].type==='op' && tokens[p].value==='['){
+      p++;
+      let [idx, np] = parseExpr(tokens, p, env);
+      if(tokens[np].type!=='op' || tokens[np].value!==']')
+        throw new Error('Falta ]');
+      p=np+1;
+      if(Array.isArray(value)) value=value[idx];
+      else if(value && typeof value==='object') value=value[idx];
+      else throw new Error('No es indexable');
+    }
+  }
+  else if(t.type==='op' && t.value==='('){
+    let [v, np] = parseExpr(tokens, pos+1, env);
+    if(tokens[np].type!=='op' || tokens[np].value!==')')
+      throw new Error('Falta )');
+    value=v; p=np+1;
+  }
+  else throw new Error('Token inesperado: '+t.value);
+  return [value, p];
+}
 
-        function closeMissions() {
-            document.getElementById('missionsModal').classList.remove('active');
-        }
+function evalExpr(expr, env){
+  if(expr.trim()==='') return '';
+  const tokens = tokenize(expr);
+  const [val, p] = parseExpr(tokens, 0, env);
+  if(p<tokens.length) throw new Error('Tokens sobrantes en: '+expr);
+  return val;
+}
 
-        function switchMissionTab(el, category) {
-            document.querySelectorAll('.mission-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.mission-category').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById(`mission-${category}`).classList.add('active');
-        }
+function formatValue(v){
+  if(Array.isArray(v)) return '['+v.map(formatValue).join(', ')+']';
+  if(v && typeof v==='object' && v.__map){
+    const entries=Object.entries(v).filter(([k])=>k!=='__map');
+    return '{'+entries.map(([k,val])=>k+': '+formatValue(val)).join(', ')+'}';
+  }
+  if(typeof v==='string') return v;
+  return String(v);
+}
 
-        function renderMissions() {
-            const totalMissions = Object.values(missions).flat().length;
-            const completedCount = completedMissions.size;
-            const progress = (completedCount / totalMissions) * 100;
+function splitArgs(s){
+  const res=[]; let cur='', depth=0, inStr=false, q='';
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(inStr){ cur+=c; if(c===q) inStr=false; continue; }
+    if(c==='"' || c==="'"){ inStr=true; q=c; cur+=c; continue; }
+    if('([{'.includes(c)){ depth++; cur+=c; continue; }
+    if(')]}'.includes(c)){ depth--; cur+=c; continue; }
+    if(c===',' && depth===0){ res.push(cur.trim()); cur=''; continue; }
+    cur+=c;
+  }
+  if(cur.trim()!=='') res.push(cur.trim());
+  return res;
+}
 
-            const bar = document.getElementById('progressBar');
-            bar.style.width = `${Math.max(progress, 8)}%`;
-            bar.textContent = `${completedCount}/${totalMissions}`;
+/* Intérpretes */
+function runPython(code){
+  const env = { vars:{} };
+  const lines = code.split('\n').map(l=>l.replace(/\s+$/,''));
+  for(let ln of lines){
+    ln = ln.trim();
+    if(!ln || ln.startsWith('#')) continue;
 
-            for (const category in missions) {
-                const list = document.getElementById(`missionList-${category}`);
-                list.innerHTML = '';
+    let m = ln.match(/^print\((.*)\)$/);
+    if(m){
+      const args = splitArgs(m[1]);
+      const out = args.map(a=>formatValue(evalExpr(a,env))).join(' ');
+      print(out); continue;
+    }
 
-                missions[category].forEach((mission, index) => {
-                    const isCompleted = completedMissions.has(mission.id);
-                    const isLocked = index > 0 && !completedMissions.has(missions[category][index - 1].id);
+    m = ln.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*(?::\s*\w+)?\s*=\s*(.+)$/);
+    if(m){
+      const name=m[1], expr=m[2];
+      env.vars[name] = parsePythonValue(expr, env);
+      continue;
+    }
 
-                    const item = document.createElement('div');
-                    item.className = `mission-item ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`;
+    m = ln.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\[(.+)\]\s*=\s*(.+)$/);
+    if(m){
+      const name=m[1], idx=evalExpr(m[2],env), val=evalExpr(m[3],env);
+      env.vars[name][idx]=val; continue;
+    }
 
-                    item.innerHTML = `
-                        <div class="mission-header">
-                            <div class="mission-title">
-                                ${mission.title}
-                                ${isCompleted ? '<span class="badge badge-completed">✓ Completada</span>' : ''}
-                                ${!isCompleted && !isLocked ? '<span class="badge badge-new">Nueva</span>' : ''}
-                            </div>
-                            <div class="mission-status">${isCompleted ? '✅' : isLocked ? '🔒' : '⭕'}</div>
-                        </div>
-                        <div class="mission-description">${mission.description}</div>
-                        <div class="mission-objective">
-                            <div class="mission-objective-title">🎯 Objetivo:</div>
-                            <div class="mission-objective-text">${mission.objective}</div>
-                        </div>
-                    `;
+    m = ln.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\.(append|add)\((.+)\)$/);
+    if(m){
+      const arr=env.vars[m[1]];
+      if(!Array.isArray(arr)) throw new Error(m[1]+' no es una lista');
+      arr.push(evalExpr(m[3],env)); continue;
+    }
 
-                    if (!isLocked) {
-                        item.onclick = () => loadMission(mission);
-                    }
+    throw new Error('Línea no reconocida (Python): '+ln);
+  }
+}
 
-                    list.appendChild(item);
-                });
-            }
-        }
+function parsePythonValue(expr, env){
+  expr=expr.trim();
+  if(expr.startsWith('[') && expr.endsWith(']')){
+    const inner=expr.slice(1,-1);
+    if(inner.trim()==='') return [];
+    return splitArgs(inner).map(a=>evalExpr(a,env));
+  }
+  if(expr.startsWith('{') && expr.endsWith('}')){
+    const inner=expr.slice(1,-1);
+    const obj={__map:true};
+    if(inner.trim()==='') return obj;
+    for(const pair of splitArgs(inner)){
+      const [k,v]=pair.split(':').map(s=>s.trim());
+      obj[evalExpr(k,env)] = evalExpr(v,env);
+    }
+    return obj;
+  }
+  if(expr==='list()') return [];
+  if(expr==='dict()') return {__map:true};
+  return evalExpr(expr, env);
+}
 
-        function loadMission(mission) {
-            state.currentMission = mission;
-            document.getElementById('codeEditor').value = mission.code;
-            updateLineNumbers();
-            closeMissions();
+function runJava(code){
+  const env = { vars:{} };
+  code = code.replace(/public\s+class\s+\w+\s*\{?/g,'')
+             .replace(/public\s+static\s+void\s+main\s*\(\s*String\[\]\s*\w*\s*\)\s*\{?/g,'')
+             .replace(/\}\s*$/g,'');
+  const lines = code.split('\n');
+  for(let raw of lines){
+    let ln = raw.trim().replace(/;$/,'').trim();
+    if(!ln || ln==='{' || ln==='}') continue;
 
-            // Mostrar banner de misión activa
-            const banner = document.getElementById('missionBanner');
-            document.getElementById('bannerTitle').textContent = `🎯 Misión: ${mission.title}`;
-            document.getElementById('bannerObj').textContent = mission.objective;
-            banner.classList.add('active');
+    let m = ln.match(/^System\.out\.println\((.*)\)$/);
+    if(m){
+      const args=splitArgs(m[1]);
+      print(args.map(a=>formatValue(evalExpr(a,env))).join(' '));
+      continue;
+    }
+    m = ln.match(/^System\.out\.print\((.*)\)$/);
+    if(m){
+      const args=splitArgs(m[1]);
+      print(args.map(a=>formatValue(evalExpr(a,env))).join(' '), '');
+      continue;
+    }
 
-            logConsole(`━━━━━━━━━━━━━━━━━━━━━━━━`, 'mission');
-            logConsole(`🎯 Misión cargada: ${mission.title}`, 'mission');
-            logConsole(`Objetivo: ${mission.objective}`, 'mission');
-            logConsole(`━━━━━━━━━━━━━━━━━━━━━━━━`, 'mission');
-        }
+    m = ln.match(/^ArrayList<\w+>\s+(\w+)\s*=\s*new\s+ArrayList<>\(\)$/);
+    if(m){ env.vars[m[1]]=[]; continue; }
+    m = ln.match(/^HashMap<\w+,\s*\w+>\s+(\w+)\s*=\s*new\s+HashMap<>\(\)$/);
+    if(m){ env.vars[m[1]]={__map:true}; continue; }
+    m = ln.match(/^(\w+)\.add\((.+)\)$/);
+    if(m){ env.vars[m[1]].push(evalExpr(m[2],env)); continue; }
+    m = ln.match(/^(\w+)\.put\((.+),\s*(.+)\)$/);
+    if(m){ env.vars[m[1]][evalExpr(m[2],env)]=evalExpr(m[3],env); continue; }
 
-        function clearCurrentMission() {
-            state.currentMission = null;
-            document.getElementById('missionBanner').classList.remove('active');
-            logConsole('[Sistema] Misión desactivada.', 'info');
-        }
+    m = ln.match(/^(int|double|float|String)\[\]\s+(\w+)\s*=\s*\{(.*)\}$/);
+    if(m){
+      const inner=m[3];
+      env.vars[m[2]] = inner.trim()===''?[]:splitArgs(inner).map(a=>evalExpr(a,env));
+      continue;
+    }
+    m = ln.match(/^(int|double|float|String)\s+(\w+)\s*=\s*(.+)$/);
+    if(m){ env.vars[m[2]] = evalExpr(m[3],env); continue; }
+    m = ln.match(/^(\w+)\s*=\s*(.+)$/);
+    if(m){ env.vars[m[1]] = evalExpr(m[2],env); continue; }
+    m = ln.match(/^(\w+)\[(.+)\]\s*=\s*(.+)$/);
+    if(m){ env.vars[m[1]][evalExpr(m[2],env)] = evalExpr(m[3],env); continue; }
 
-        // CORRECCIÓN: Función de validación mejorada
-        function checkMissionCompletion() {
-            if (!state.currentMission) return;
+    throw new Error('Línea no reconocida (Java): '+ln);
+  }
+}
 
-            const mission = state.currentMission;
-            let passed = false;
-            let details = '';
+function runCpp(code){
+  const env = { vars:{} };
+  code = code.replace(/#include\s*<[^>]+>/g,'')
+             .replace(/using\s+namespace\s+std\s*;/g,'')
+             .replace(/int\s+main\s*\(\s*\)\s*\{?/g,'')
+             .replace(/return\s+0\s*;/g,'')
+             .replace(/\}\s*$/g,'');
+  const lines = code.split('\n');
+  for(let raw of lines){
+    let ln = raw.trim().replace(/;$/,'').trim();
+    if(!ln || ln==='{' || ln==='}') continue;
 
-            try {
-                passed = mission.validate();
-            } catch (e) {
-                passed = false;
-                details = ` (Error: ${e.message})`;
-            }
+    if(ln.startsWith('cout')){
+      const parts = ln.replace(/^cout\s*<<\s*/,'').split('<<').map(s=>s.trim());
+      let out='';
+      for(const p of parts){
+        if(p==='endl' || p==='\\n' || p==='"\\n"') { }
+        else out += formatValue(evalExpr(p,env));
+      }
+      print(out); continue;
+    }
 
-            if (passed) {
-                completedMissions.add(mission.id);
-                logConsole('', 'info');
-                logConsole('╔══════════════════════════════════╗', 'success');
-                logConsole('║   ✅ ¡MISIÓN COMPLETADA! ✅      ║', 'success');
-                logConsole(`║   ${mission.title.padEnd(30)} ║`, 'success');
-                logConsole('╚══════════════════════════════════╝', 'success');
-                logConsole('', 'info');
+    let m = ln.match(/^vector<\w+>\s+(\w+)$/);
+    if(m){ env.vars[m[1]]=[]; continue; }
+    m = ln.match(/^vector<\w+>\s+(\w+)\s*=\s*\{(.*)\}$/);
+    if(m){
+      env.vars[m[1]] = m[2].trim()===''?[]:splitArgs(m[2]).map(a=>evalExpr(a,env));
+      continue;
+    }
+    m = ln.match(/^map<\w+,\s*\w+>\s+(\w+)$/);
+    if(m){ env.vars[m[1]]={__map:true}; continue; }
+    m = ln.match(/^(\w+)\.push_back\((.+)\)$/);
+    if(m){ env.vars[m[1]].push(evalExpr(m[2],env)); continue; }
+    m = ln.match(/^(\w+)\[(.+)\]\s*=\s*(.+)$/);
+    if(m){
+      const obj=env.vars[m[1]];
+      const k=evalExpr(m[2],env);
+      if(Array.isArray(obj)) obj[k]=evalExpr(m[3],env);
+      else obj[k]=evalExpr(m[3],env);
+      continue;
+    }
 
-                // Desactivar misión actual
-                state.currentMission = null;
-                document.getElementById('missionBanner').classList.remove('active');
-            } else {
-                logConsole('', 'info');
-                logConsole('❌ Misión no completada.', 'error');
-                logConsole(`Objetivo: ${mission.objective}`, 'warn');
+    m = ln.match(/^(int|double|float|string)\s+(\w+)\[\]\s*=\s*\{(.*)\}$/);
+    if(m){
+      env.vars[m[2]] = m[3].trim()===''?[]:splitArgs(m[3]).map(a=>evalExpr(a,env));
+      continue;
+    }
+    m = ln.match(/^(int|double|float|string)\s+(\w+)\s*=\s*(.+)$/);
+    if(m){ env.vars[m[2]] = evalExpr(m[3],env); continue; }
+    m = ln.match(/^(\w+)\s*=\s*(.+)$/);
+    if(m){ env.vars[m[1]] = evalExpr(m[2],env); continue; }
 
-                // Dar pistas sobre el estado actual
-                const hint = getMissionHint(mission);
-                if (hint) {
-                    logConsole(`Estado actual: ${hint}`, 'warn');
-                }
+    throw new Error('Línea no reconocida (C++): '+ln);
+  }
+}
 
-                logConsole('💡 Modifica el código y vuelve a ejecutar.', 'info');
-                logConsole('', 'info');
-            }
-        }
-
-        // Función auxiliar para dar pistas sobre el estado actual
-        function getMissionHint(mission) {
-            const id = mission.id;
-            const regs = state.registers;
-            const mem = state.memory;
-
-            // Pistas específicas según la misión
-            if (id.startsWith('suma-') || id.startsWith('resta-') ||
-                id.startsWith('mult-') || id.startsWith('div-')) {
-
-                const parts = [];
-                // Mostrar registros relevantes
-                for (let i = 0; i <= 7; i++) {
-                    if (regs[`R${i}`] !== 0) {
-                        parts.push(`R${i}=${regs[`R${i}`]}`);
-                    }
-                }
-                // Mostrar memoria relevante
-                for (let i = 0; i < 16; i++) {
-                    if (mem[i] !== 0) {
-                        parts.push(`mem[${i}]=${mem[i]}`);
-                    }
-                }
-                return parts.length > 0 ? parts.join(', ') : 'todos los registros están en 0';
-            }
-            return null;
-        }
-
-        // ==================== TUTORIAL ====================
-        function openTutorial() {
-            currentTutorialStep = 0;
-            renderTutorialStep();
-            document.getElementById('tutorialModal').classList.add('active');
-        }
-
-        function closeTutorial() {
-            document.getElementById('tutorialModal').classList.remove('active');
-        }
-
-        function renderTutorialStep() {
-            const step = tutorialSteps[currentTutorialStep];
-            const content = document.getElementById('tutorialContent');
-
-            content.innerHTML = `
-                <div class="tutorial-step">
-                    <h3>${step.title}</h3>
-                    ${step.content}
-                </div>
-                <div class="tutorial-nav">
-                    <button class="btn" onclick="prevTutorialStep()" ${currentTutorialStep === 0 ? 'disabled' : ''}>
-                        ← Anterior
-                    </button>
-                    <span style="color: #7a7a9a;">Paso ${currentTutorialStep + 1} de ${tutorialSteps.length}</span>
-                    <button class="btn" onclick="nextTutorialStep()" ${currentTutorialStep === tutorialSteps.length - 1 ? 'disabled' : ''}>
-                        Siguiente →
-                    </button>
-                </div>
-            `;
-        }
-
-        function nextTutorialStep() {
-            if (currentTutorialStep < tutorialSteps.length - 1) {
-                currentTutorialStep++;
-                renderTutorialStep();
-            }
-        }
-
-        function prevTutorialStep() {
-            if (currentTutorialStep > 0) {
-                currentTutorialStep--;
-                renderTutorialStep();
-            }
-        }
-
-        // ==================== INICIO ====================
-        window.onload = function () {
-            initMemoryGrid();
-            initEditor();
-        };
-    </script>
+function runCode(){
+  clearOutput();
+  const lang = langEl.value;
+  const code = codeEl.value;
+  print('▶ Ejecutando '+lang.toUpperCase()+'...', 'info');
+  try{
+    if(lang==='python') runPython(code);
+    else if(lang==='java') runJava(code);
+    else if(lang==='cpp')  runCpp(code);
+    print('✓ Programa finalizado', 'info');
+  }catch(e){
+    print('✖ Error: '+e.message, 'err');
+  }
+}
+</script>
 </body>
 </html>
